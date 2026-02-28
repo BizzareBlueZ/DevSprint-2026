@@ -1,0 +1,271 @@
+.page {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.connectionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12.5px;
+  color: #666;
+  width: fit-content;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot-color, #aaa);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.orderHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orderIdBadge {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1a1a;
+  font-family: 'DM Serif Display', serif;
+  letter-spacing: -0.3px;
+}
+
+.orderMeta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.orderItem {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.orderTime {
+  font-size: 12.5px;
+  color: #aaa;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef9e7;
+  border: 1px solid #f6d860;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #92610d;
+}
+
+/* Tracker card */
+.trackerCard {
+  background: white;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transition: border-color 0.3s;
+}
+
+.trackerComplete {
+  border-color: #10b981;
+  box-shadow: 0 2px 20px rgba(16,185,129,0.12);
+}
+
+/* Progress bar */
+.progressBar {
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3ea99f, #10b981);
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Steps */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f5f5f5;
+  position: relative;
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.stepIconWrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  background: #f5f5f5;
+  color: #bbb;
+  transition: all 0.3s;
+}
+
+.stepDone .stepIconWrap {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stepCurrent .stepIconWrap {
+  background: #e8f5f4;
+  color: #3ea99f;
+  animation: stepPop 0.4s ease;
+}
+
+@keyframes stepPop {
+  0% { transform: scale(0.85); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.pingRing {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #3ea99f;
+  animation: pingAnim 1.5s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes pingAnim {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 5px;
+}
+
+.stepLabel {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #1a1a1a;
+  transition: color 0.3s;
+}
+
+.stepFuture .stepLabel {
+  color: #bbb;
+}
+
+.stepDesc {
+  font-size: 12.5px;
+  color: #aaa;
+}
+
+.stepDone .stepDesc,
+.stepCurrent .stepDesc {
+  color: #888;
+}
+
+/* Status message */
+.statusMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.readyMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 14px 20px;
+  color: #166534;
+  font-weight: 500;
+  font-size: 14px;
+  width: 100%;
+  animation: fadeIn 0.4s ease;
+}
+
+.waitingMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #888;
+  font-size: 13.5px;
+}
+
+.spinnerSmall {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #eee;
+  border-top-color: #3ea99f;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.backBtn {
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  color: #555;
+  cursor: pointer;
+  font-family: var(--font, 'DM Sans', sans-serif);
+  transition: all 0.15s;
+}
+
+.backBtn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}

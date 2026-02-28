@@ -1,0 +1,226 @@
+.page {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* SmartCard */
+.smartCard {
+  background: linear-gradient(135deg, #2d5a7a 0%, #3ea99f 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  color: white;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 8px 32px rgba(62,169,159,0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.smartCard::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.smartCard::before {
+  content: '';
+  position: absolute;
+  right: 20px;
+  bottom: -20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  pointer-events: none;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardChip {
+  width: 36px;
+  height: 28px;
+  background: linear-gradient(135deg, #e6a817, #f4c95d);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chipInner {
+  width: 22px;
+  height: 18px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  border-radius: 3px;
+}
+
+.cardLabel {
+  font-size: 12px;
+  opacity: 0.75;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.cardBalance {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.currency {
+  font-size: 22px;
+  opacity: 0.8;
+  font-weight: 300;
+}
+
+.amount {
+  font-size: 40px;
+  font-weight: 300;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.cardBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.cardStudentId {
+  font-size: 13px;
+  opacity: 0.75;
+  letter-spacing: 0.5px;
+  font-family: 'DM Serif Display', serif;
+}
+
+.cardName {
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.loadingBox {
+  background: white;
+  border-radius: 10px;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  border: 1px solid #eee;
+}
+
+.emptyBox {
+  background: white;
+  border-radius: 10px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #bbb;
+  font-size: 13.5px;
+  border: 1px solid #eee;
+}
+
+/* Transactions */
+.txList {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.txItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.1s;
+}
+
+.txItem:last-child {
+  border-bottom: none;
+}
+
+.txItem:hover {
+  background: #fafafa;
+}
+
+.txIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.txCredit {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.txDebit {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.txInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.txDesc {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.txDate {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.txAmount {
+  font-size: 14.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.txAmountCredit {
+  color: #16a34a;
+}
+
+.txAmountDebit {
+  color: #dc2626;
+}

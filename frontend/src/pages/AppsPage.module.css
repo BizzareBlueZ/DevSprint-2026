@@ -1,0 +1,93 @@
+.page {
+  max-width: 700px;
+}
+
+.heading {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.appCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: var(--font, 'DM Sans', sans-serif);
+  transition: background 0.15s;
+  border-radius: 0;
+  animation: slideIn 0.25s ease both;
+}
+
+.appCard:first-child {
+  border-radius: 10px 10px 0 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.appCard:last-child {
+  border-radius: 0 0 10px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.appCard:only-child {
+  border-radius: 10px;
+}
+
+.appCard:hover {
+  background: #fafafa;
+}
+
+.appCard:active {
+  background: #f5f5f5;
+}
+
+.iconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.appName {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.appDesc {
+  font-size: 13px;
+  color: #888;
+}
+
+.chevron {
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
