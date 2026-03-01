@@ -11,13 +11,17 @@ const app  = express()
 // ─── Middleware ────────────────────────────────────────────────
 app.use(cors({
   origin: [
-    'http://localhost:5173',   // Vite dev server
-    'http://localhost:80',     // Docker nginx
+    'http://localhost:5173',
+    'http://localhost:80',
     'http://localhost',
   ],
   credentials: true,
 }))
 app.use(express.json())
+
+const { chaosMiddleware, chaosRoute } = require('./chaos')
+app.use(chaosMiddleware)
+chaosRoute(app)
 
 // ─── Rate Limiter (bonus requirement: 3 attempts per minute per student) ──
 const loginLimiter = rateLimit({
@@ -55,14 +59,14 @@ app.post('/login', loginLimiter, async (req, res) => {
 
   // Accept both formats: "230042135" or "230042135@iut-dhaka.edu"
   const normalizedEmail = email.includes('@')
-    ? email.toLowerCase().trim()
-    : `${email.trim()}@iut-dhaka.edu`
+      ? email.toLowerCase().trim()
+      : `${email.trim()}@iut-dhaka.edu`
 
   try {
     // ── Look up student ──
     const result = await pool.query(
-      'SELECT id, student_id, email, password_hash, name, department, year, is_active FROM students WHERE email = $1',
-      [normalizedEmail]
+        'SELECT id, student_id, email, password_hash, name, department, year, is_active FROM students WHERE email = $1',
+        [normalizedEmail]
     )
 
     const student = result.rows[0]
@@ -93,7 +97,7 @@ app.post('/login', loginLimiter, async (req, res) => {
       year:       student.year,
     }
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET || 'iut-cafeteria-super-secret-2026', {
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '24h',
     })
 
@@ -133,8 +137,8 @@ app.post('/register', async (req, res) => {
   try {
     // Check if already exists
     const existing = await pool.query(
-      'SELECT id FROM students WHERE email = $1 OR student_id = $2',
-      [email.toLowerCase(), studentId]
+        'SELECT id FROM students WHERE email = $1 OR student_id = $2',
+        [email.toLowerCase(), studentId]
     )
 
     if (existing.rows.length > 0) {
@@ -146,9 +150,9 @@ app.post('/register', async (req, res) => {
 
     // Insert
     await pool.query(
-      `INSERT INTO students (student_id, email, password_hash, name, department, year)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [studentId, email.toLowerCase(), passwordHash, name, department, parseInt(year)]
+        `INSERT INTO students (student_id, email, password_hash, name, department, year)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [studentId, email.toLowerCase(), passwordHash, name, department, parseInt(year)]
     )
 
     return res.status(201).json({
@@ -184,6 +188,34 @@ app.post('/verify', (req, res) => {
   }
 })
 
+
+/**
+ * POST /admin/login
+ * Authenticates admin users against the admins table
+ */
+app.post('/admin/login', async (req, res) => {
+  const { username, password } = req.body
+  if (!username || !password) return res.status(400).json({ message: 'Username and password are required.' })
+  try {
+    const result = await pool.query(
+        'SELECT id, username, email, password_hash, full_name, role, is_active FROM admins WHERE username = $1',
+        [username.toLowerCase().trim()]
+    )
+    const admin = result.rows[0]
+    if (!admin) return res.status(401).json({ message: 'Invalid credentials.' })
+    if (!admin.is_active) return res.status(403).json({ message: 'Admin account is deactivated.' })
+    const passwordMatch = await bcrypt.compare(password, admin.password_hash)
+    if (!passwordMatch) return res.status(401).json({ message: 'Invalid credentials.' })
+    await pool.query('UPDATE admins SET last_login_at = NOW() WHERE id = $1', [admin.id])
+    const payload = { adminId: admin.id, username: admin.username, fullName: admin.full_name, role: admin.role, isAdmin: true }
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
+    return res.status(200).json({ token, admin: payload })
+  } catch (err) {
+    console.error('Admin login error:', err)
+    return res.status(500).json({ message: 'Internal server error.' })
+  }
+})
+
 /**
  * GET /health
  * Returns service + DB health status
@@ -216,8 +248,8 @@ app.get('/metrics', (req, res) => {
     totalLogins:      metrics.totalLogins,
     failedLogins:     metrics.failedLogins,
     averageLatencyMs: metrics.requestCount > 0
-      ? Math.round(metrics.totalLatency / metrics.requestCount)
-      : 0,
+        ? Math.round(metrics.totalLatency / metrics.requestCount)
+        : 0,
     uptime: process.uptime(),
   })
 })

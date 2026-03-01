@@ -269,3 +269,58 @@
   background: #f5f5f5;
   border-color: #ccc;
 }
+
+/* ── New additions ── */
+.orderAmount {
+  color: #3ea99f;
+  font-weight: 600;
+}
+
+.refundNotice {
+  background: rgba(62, 169, 159, 0.08);
+  border: 1px solid rgba(62, 169, 159, 0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  color: #3ea99f;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.failedActions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.retryBtn {
+  padding: 10px 22px;
+  background: #3ea99f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s;
+}
+.retryBtn:hover { background: #2d8a81; }
+
+.walletBtn {
+  padding: 10px 22px;
+  background: white;
+  color: #666;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.walletBtn:hover {
+  border-color: #3ea99f;
+  color: #3ea99f;
+}

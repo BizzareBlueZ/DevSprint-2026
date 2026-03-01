@@ -35,6 +35,10 @@ const metrics = { totalOrders: 0, failureCount: 0, totalLatency: 0, requestCount
 app.use(cors())
 app.use(express.json())
 
+const { chaosMiddleware, chaosRoute } = require('./chaos')
+app.use(chaosMiddleware)
+chaosRoute(app)
+
 // ─── GET /stock/:itemId — get current stock level ──────────────
 app.get('/stock/:itemId', async (req, res) => {
     const { itemId } = req.params
@@ -99,9 +103,9 @@ app.post('/stock/:itemId/decrement', async (req, res) => {
             // Attempt atomic decrement — only succeeds if version hasn't changed
             const update = await pool.query(
                 `UPDATE stock
-         SET quantity = quantity - 1, version = version + 1, updated_at = NOW()
-         WHERE item_id = $1 AND version = $2 AND quantity > 0
-         RETURNING quantity`,
+                 SET quantity = quantity - 1, version = version + 1, updated_at = NOW()
+                 WHERE item_id = $1 AND version = $2 AND quantity > 0
+                     RETURNING quantity`,
                 [itemId, version]
             )
 

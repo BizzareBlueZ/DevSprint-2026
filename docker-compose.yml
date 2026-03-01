@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
 
   # ── Infrastructure ──────────────────────────────────────────
@@ -44,7 +46,26 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Application Services ────────────────────────────────────
+  # ── pgAdmin — Web-based Database Viewer ─────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@iut-dhaka.edu
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./database/pgadmin-servers.json:/pgadmin4/servers.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cafeteria-net
+
+  # ── Application Services ────────────────────────────────────────
 
   identity-provider:
     build: ./identity-provider
@@ -157,3 +178,4 @@ networks:
 
 volumes:
   postgres_data:
+  pgadmin_data:

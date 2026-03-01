@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "IUT Cafeteria DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "cafeteria",
+      "Username": "admin",
+      "Password": "secret123",
+      "SSLMode": "prefer",
+      "SavePassword": true
+    }
+  }
+}

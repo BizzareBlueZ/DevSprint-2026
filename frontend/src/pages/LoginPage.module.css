@@ -14,8 +14,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(62,169,159,0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(249,232,232,0.6) 0%, transparent 50%);
+          radial-gradient(circle at 20% 20%, rgba(62,169,159,0.08) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(249,232,232,0.6) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -183,3 +183,129 @@
 .dot {
   color: #ddd;
 }
+
+.successBox {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #10b981;
+  margin-bottom: 4px;
+}
+
+.fieldHint {
+  font-size: 11.5px;
+  color: #aaa;
+  margin-top: 4px;
+  display: block;
+}
+
+.footer {
+  text-align: center;
+  font-size: 13px;
+  color: #888;
+  margin-top: 16px;
+}
+
+.footerLink {
+  background: none;
+  border: none;
+  color: #3ea99f;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btnSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.successBox {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #10b981;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+  color: #ccc;
+  font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+
+.secondaryBtn {
+  width: 100%;
+  padding: 11px;
+  background: white;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+}
+.secondaryBtn:hover {
+  border-color: #3ea99f;
+  color: #3ea99f;
+  background: rgba(62,169,159,0.04);
+}
+
+.adminLink {
+  width: 100%;
+  padding: 9px;
+  background: none;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #aaa;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: color 0.15s;
+  margin-bottom: 4px;
+}
+.adminLink:hover { color: #3ea99f; }
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

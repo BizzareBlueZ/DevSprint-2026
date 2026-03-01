@@ -18,6 +18,10 @@ const io = new Server(server, {
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'] }))
 app.use(express.json())
 
+const { chaosMiddleware, chaosRoute } = require('./chaos')
+app.use(chaosMiddleware)
+chaosRoute(app)
+
 // ─── Metrics ───────────────────────────────────────────────────
 const metrics = { notificationsSent: 0, activeConnections: 0 }
 
