@@ -27,6 +27,7 @@ const pool = new Pool({
 })
 
 const metrics = { processed: 0, failed: 0, inProgress: 0 }
+let rabbitConnected = false
 
 async function notify(orderId, status, orderInfo = {}) {
     try {
@@ -57,6 +58,7 @@ async function startConsumer() {
         const channel = await conn.createChannel()
         await channel.assertQueue('orders', { durable: true })
         channel.prefetch(5)
+        rabbitConnected = true
         console.log('Connected to RabbitMQ')
         channel.consume('orders', async (msg) => {
             if (!msg) return
@@ -70,14 +72,29 @@ async function startConsumer() {
                 channel.nack(msg, false, false)
             }
         })
-        conn.on('close', () => setTimeout(startConsumer, 5000))
+        conn.on('close', () => { rabbitConnected = false; setTimeout(startConsumer, 5000) })
     } catch {
+        rabbitConnected = false
         console.warn('RabbitMQ not available - retrying in 5s...')
         setTimeout(startConsumer, 5000)
     }
 }
 
-app.get('/health', (req, res) => res.json({ status: 'healthy', service: 'kitchen-queue', timestamp: new Date().toISOString() }))
+app.get('/health', async (req, res) => {
+    const deps = { database: 'connected', rabbitmq: rabbitConnected ? 'connected' : 'disconnected' }
+    try {
+        await pool.query('SELECT 1')
+    } catch {
+        deps.database = 'disconnected'
+    }
+    const healthy = deps.database === 'connected' && deps.rabbitmq === 'connected'
+    res.status(healthy ? 200 : 503).json({
+        status: healthy ? 'healthy' : 'unhealthy',
+        service: 'kitchen-queue',
+        dependencies: deps,
+        timestamp: new Date().toISOString(),
+    })
+})
 app.get('/metrics', (req, res) => res.json({ totalOrders: metrics.processed, failureCount: metrics.failed, inProgress: metrics.inProgress, uptime: process.uptime() }))
 
 const PORT = process.env.PORT || 3003

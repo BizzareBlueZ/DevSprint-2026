@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import styles from './AdminDashboard.module.css'
 
@@ -12,6 +13,11 @@ const SERVICES = [
 
 const svcUrl = (svc) => `http://localhost:${svc.port}`
 
+function getAdminHeaders() {
+    const token = sessionStorage.getItem('admin_token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export default function AdminDashboard() {
     const [health,        setHealth]        = useState({})
     const [metrics,       setMetrics]       = useState({})
@@ -20,6 +26,7 @@ export default function AdminDashboard() {
     const [lastUpdated,   setLastUpdated]   = useState(null)
     const [alerts,        setAlerts]        = useState([])
     const [latencyWindow, setLatencyWindow] = useState({})
+    const navigate = useNavigate()
 
     const fetchAll = useCallback(async () => {
         const healthMap = {}
@@ -65,8 +72,18 @@ export default function AdminDashboard() {
         const willKill = !killed[svc.id]
         setChaosLoading(prev => ({ ...prev, [svc.id]: true }))
         try {
-            await axios.post(`${svcUrl(svc)}/chaos`, { killed: willKill }, { timeout: 2000 })
-        } catch {}
+            await axios.post(`${svcUrl(svc)}/chaos`, { killed: willKill }, {
+                timeout: 2000,
+                headers: getAdminHeaders(),
+            })
+        } catch (err) {
+            if (err.response?.status === 401) {
+                sessionStorage.removeItem('admin_token')
+                sessionStorage.removeItem('admin_user')
+                navigate('/admin/login')
+                return
+            }
+        }
         setKilled(prev => ({ ...prev, [svc.id]: willKill }))
         setChaosLoading(prev => ({ ...prev, [svc.id]: false }))
         setTimeout(fetchAll, 1200)

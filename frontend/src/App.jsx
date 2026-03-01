@@ -25,8 +25,18 @@ function ProtectedRoute({ children }) {
 }
 
 function AdminRoute({ children }) {
-    const admin = sessionStorage.getItem('admin_auth')
-    return admin ? children : <Navigate to="/admin/login" replace />
+    const adminToken = sessionStorage.getItem('admin_token')
+    if (!adminToken) return <Navigate to="/admin/login" replace />
+    try {
+        // Decode JWT payload (base64) to verify isAdmin flag
+        const payload = JSON.parse(atob(adminToken.split('.')[1]))
+        if (!payload.isAdmin) return <Navigate to="/admin/login" replace />
+    } catch {
+        sessionStorage.removeItem('admin_token')
+        sessionStorage.removeItem('admin_user')
+        return <Navigate to="/admin/login" replace />
+    }
+    return children
 }
 
 export default function App() {

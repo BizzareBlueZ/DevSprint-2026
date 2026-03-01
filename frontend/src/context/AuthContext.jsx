@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
     }
   })
   const [token, setToken] = useState(() => sessionStorage.getItem('iut_token') || null)
+  const [avatar, setAvatar] = useState(() => sessionStorage.getItem('iut_avatar') || null)
 
   const login = useCallback(async (email, password) => {
     const res = await axios.post('/api/auth/login', { email, password })
@@ -26,11 +27,22 @@ export function AuthProvider({ children }) {
     return userData
   }, [])
 
+  const updateAvatar = useCallback((dataUrl) => {
+    setAvatar(dataUrl)
+    if (dataUrl) {
+      sessionStorage.setItem('iut_avatar', dataUrl)
+    } else {
+      sessionStorage.removeItem('iut_avatar')
+    }
+  }, [])
+
   const logout = useCallback(() => {
     setToken(null)
     setUser(null)
+    setAvatar(null)
     sessionStorage.removeItem('iut_token')
     sessionStorage.removeItem('iut_user')
+    sessionStorage.removeItem('iut_avatar')
     delete axios.defaults.headers.common['Authorization']
   }, [])
 
@@ -42,7 +54,7 @@ export function AuthProvider({ children }) {
   }, [token])
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, avatar, login, logout, updateAvatar, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   )

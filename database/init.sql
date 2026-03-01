@@ -84,6 +84,7 @@ CREATE INDEX idx_stock_item_id ON stock(item_id);
 CREATE TABLE orders (
                         id              SERIAL PRIMARY KEY,
                         order_id        VARCHAR(50)   UNIQUE NOT NULL,
+                        idempotency_key VARCHAR(100),
                         student_id      VARCHAR(20)   NOT NULL REFERENCES students(student_id),
                         item_id         INTEGER       NOT NULL REFERENCES menu_items(id),
                         type            VARCHAR(20)   NOT NULL DEFAULT 'dinner',
@@ -96,6 +97,8 @@ CREATE TABLE orders (
                         created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX idx_orders_idempotency ON orders(idempotency_key) WHERE idempotency_key IS NOT NULL;
 
 CREATE INDEX idx_orders_student_id ON orders(student_id);
 CREATE INDEX idx_orders_status     ON orders(status);

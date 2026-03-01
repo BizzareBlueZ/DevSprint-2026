@@ -65,10 +65,22 @@ app.get('/stock/:itemId', async (req, res) => {
 })
 
 // ─── POST /stock/:itemId/decrement — optimistic locking decrement
+// Accepts optional orderId in body for idempotent stock deduction.
+// If orderId is provided and this decrement was already processed,
+// returns success without decrementing again.
 app.post('/stock/:itemId/decrement', async (req, res) => {
     const start = Date.now()
     const { itemId } = req.params
+    const { orderId } = req.body || {}
     const MAX_RETRIES = 3
+
+    // Idempotency: if orderId provided, check Redis for prior processing
+    if (orderId && redisClient) {
+        const alreadyProcessed = await redisClient.get(`decrement:${orderId}`).catch(() => null)
+        if (alreadyProcessed) {
+            return res.status(200).json({ message: 'Stock already decremented for this order.', idempotent: true })
+        }
+    }
 
     // Check Redis cache first — fast rejection if out of stock
     if (redisClient) {
@@ -117,7 +129,11 @@ app.post('/stock/:itemId/decrement', async (req, res) => {
             const newQuantity = update.rows[0].quantity
 
             // Update Redis cache with new quantity
-            if (redisClient) await redisClient.set(`stock:${itemId}`, newQuantity, 'EX', 60).catch(() => {})
+            if (redisClient) {
+                await redisClient.set(`stock:${itemId}`, newQuantity, 'EX', 60).catch(() => {})
+                // Mark this orderId as processed for idempotency
+                if (orderId) await redisClient.set(`decrement:${orderId}`, '1', 'EX', 3600).catch(() => {})
+            }
 
             metrics.totalOrders++
             metrics.requestCount++
@@ -140,12 +156,18 @@ app.post('/stock/:itemId/decrement', async (req, res) => {
 
 // ─── GET /health ───────────────────────────────────────────────
 app.get('/health', async (req, res) => {
-    try {
-        await pool.query('SELECT 1')
-        res.status(200).json({ status: 'healthy', service: 'stock-service', timestamp: new Date().toISOString() })
-    } catch (err) {
-        res.status(503).json({ status: 'unhealthy', reason: err.message })
-    }
+    const deps = { database: 'connected', redis: 'connected' }
+    try { await pool.query('SELECT 1') } catch { deps.database = 'disconnected' }
+    if (redisClient) {
+        try { await redisClient.ping() } catch { deps.redis = 'disconnected' }
+    } else { deps.redis = 'not_configured' }
+    const healthy = deps.database === 'connected'
+    res.status(healthy ? 200 : 503).json({
+        status: healthy ? 'healthy' : 'unhealthy',
+        service: 'stock-service',
+        dependencies: deps,
+        timestamp: new Date().toISOString(),
+    })
 })
 
 // ─── GET /metrics ──────────────────────────────────────────────

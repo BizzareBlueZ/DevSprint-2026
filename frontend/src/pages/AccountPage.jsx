@@ -1,65 +1,118 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { parseStudentId } from '../utils/studentIdParser'
 import styles from './AccountPage.module.css'
 
 export default function AccountPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, avatar, updateAvatar } = useAuth()
   const navigate = useNavigate()
+  const fileRef = useRef(null)
+  const studentId = user?.studentId || user?.email?.split('@')[0] || '—'
+  
+  // Parse student ID to extract year and department
+  const studentInfo = parseStudentId(studentId)
+  const department = studentInfo.valid ? studentInfo.department : user?.department || 'CSE'
+  const year = studentInfo.valid ? studentInfo.yearLabel : user?.year ? `Year ${user.year}` : '—'
 
   function handleLogout() {
     logout()
     navigate('/login')
   }
 
-  const studentId = user?.studentId || user?.email?.split('@')[0] || '—'
+  function handlePhotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = () => updateAvatar(reader.result)
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  function handleRemovePhoto() {
+    updateAvatar(null)
+  }
+
+  const details = [
+    { label: 'Full Name',   value: user?.name || '—',       icon: '👤' },
+    { label: 'Email',       value: user?.email || '—',      icon: '📧' },
+    { label: 'Student ID',  value: studentId,               icon: '🪪' },
+    { label: 'Department',  value: department,              icon: '🏛️' },
+    { label: 'Year',        value: year,                    icon: '📅' },
+  ]
 
   return (
     <div className={styles.page}>
-      {/* Profile card */}
-      <div className={styles.profileCard}>
-        <div className={styles.avatar}>
-          {user?.name ? user.name.charAt(0).toUpperCase() : 'S'}
+      {/* Profile hero */}
+      <div className={styles.hero}>
+        <div className={styles.heroGlow} />
+        <div className={styles.avatarWrap}>
+          <div className={styles.avatar}>
+            {avatar
+              ? <img src={avatar} alt="Profile" className={styles.avatarImg} />
+              : (user?.name ? user.name.charAt(0).toUpperCase() : 'S')
+            }
+          </div>
+          <div className={styles.avatarRing} />
+          <button className={styles.avatarEditBtn} onClick={() => fileRef.current?.click()} title="Change photo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handlePhotoChange} />
         </div>
-        <div className={styles.profileInfo}>
-          <h2 className={styles.profileName}>{user?.name || 'Student'}</h2>
-          <span className={styles.profileEmail}>{user?.email || '—'}</span>
-          <span className={styles.profileId}>Student ID: {studentId}</span>
+        <div className={styles.heroText}>
+          <h1 className={styles.heroName}>{user?.name || 'Student'}</h1>
+          <p className={styles.heroEmail}>{user?.email || '—'}</p>
+          <div className={styles.heroBadge}>
+            <span>{department}</span>
+            <span className={styles.heroDot} />
+            <span>{year}</span>
+            <span className={styles.heroDot} />
+            <span>{studentId}</span>
+          </div>
         </div>
       </div>
 
-      {/* Details */}
+      {/* Details card */}
       <div className={styles.detailsCard}>
-        <div className={styles.detailRow}>
-          <span className={styles.detailLabel}>Full Name</span>
-          <span className={styles.detailValue}>{user?.name || '—'}</span>
+        <div className={styles.cardHeader}>
+          <h2 className={styles.cardTitle}>Account Details</h2>
         </div>
-        <div className={styles.detailRow}>
-          <span className={styles.detailLabel}>Email</span>
-          <span className={styles.detailValue}>{user?.email || '—'}</span>
-        </div>
-        <div className={styles.detailRow}>
-          <span className={styles.detailLabel}>Student ID</span>
-          <span className={styles.detailValue}>{studentId}</span>
-        </div>
-        <div className={styles.detailRow}>
-          <span className={styles.detailLabel}>Department</span>
-          <span className={styles.detailValue}>{user?.department || 'CSE'}</span>
-        </div>
-        <div className={styles.detailRow}>
-          <span className={styles.detailLabel}>Year</span>
-          <span className={styles.detailValue}>{user?.year || '—'}</span>
-        </div>
+        {details.map((d, i) => (
+          <div key={i} className={styles.row}>
+            <div className={styles.rowLeft}>
+              <span className={styles.rowIcon}>{d.icon}</span>
+              <span className={styles.rowLabel}>{d.label}</span>
+            </div>
+            <span className={styles.rowValue}>{d.value}</span>
+          </div>
+        ))}
       </div>
 
-      <button className={styles.logoutBtn} onClick={handleLogout}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <polyline points="16 17 21 12 16 7" />
-          <line x1="21" y1="12" x2="9" y2="12" />
-        </svg>
-        Sign Out
-      </button>
+      {/* Actions */}
+      <div className={styles.actions}>
+        {avatar && (
+          <button className={styles.removePhotoBtn} onClick={handleRemovePhoto}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Remove Photo
+          </button>
+        )}
+        <button className={styles.logoutBtn} onClick={handleLogout}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign Out
+        </button>
+      </div>
     </div>
   )
 }

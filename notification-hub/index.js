@@ -74,9 +74,12 @@ app.post('/notify', (req, res) => {
 
 // ─── GET /health ───────────────────────────────────────────────
 app.get('/health', (req, res) => {
-    res.status(200).json({
-        status:            'healthy',
+    const socketReady = io.engine && io.engine.clientsCount !== undefined
+    const healthy = socketReady
+    res.status(healthy ? 200 : 503).json({
+        status:            healthy ? 'healthy' : 'unhealthy',
         service:           'notification-hub',
+        dependencies:      { socketio: socketReady ? 'ready' : 'not_ready' },
         activeConnections: metrics.activeConnections,
         timestamp:         new Date().toISOString(),
     })

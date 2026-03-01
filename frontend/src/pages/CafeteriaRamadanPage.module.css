@@ -1,208 +1,313 @@
+/* Navy Blue Iftar Theme */
 .page {
-  max-width: 820px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  background: #0d0f1a;
+  color: #e8e6f0;
+  padding: 32px;
+  min-height: calc(100vh - 60px); /* Full height minus topbar */
+  max-width: 100%;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  margin: -28px; /* Negate parent padding */
+  width: calc(100% + 56px); /* Compensate for negative margins */
 }
 
-.header {
+/* Greeting */
+.greeting {
+  margin-bottom: 28px;
+}
+
+.greeting h2 {
+  font-family: 'Playfair Display', 'DM Sans', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #e8e6f0;
+  margin: 0 0 4px 0;
+}
+
+.greeting p {
+  color: #7a789a;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* Iftar Banner */
+.iftarBanner {
+  background: linear-gradient(135deg, #1f1430 0%, #1a1835 50%, #1a1220 100%);
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  border-radius: 14px;
+  padding: 20px 24px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
 }
 
-.subheading {
-  font-size: 13.5px;
-  color: #888;
+.iftarBanner::after {
+  content: '☪';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 4rem;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.bannerLeft {
+  z-index: 1;
+}
+
+.countdownLabel {
+  font-size: 0.8rem;
+  color: #7a789a;
+  margin-bottom: 4px;
+}
+
+.countdownTime {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #f0a500;
+  letter-spacing: 0.05em;
+  font-family: 'Courier New', monospace;
+}
+
+.pickupLabel {
+  font-size: 0.75rem;
+  color: #7a789a;
   margin-top: 2px;
 }
 
-.mealTypeTabs {
+.bannerRight {
+  text-align: right;
+  z-index: 1;
+}
+
+.statusPill {
+  background: rgba(34, 201, 122, 0.12);
+  border: 1px solid rgba(34, 201, 122, 0.25);
+  color: #22c97a;
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.statusDetails {
+  font-size: 0.72rem;
+  color: #7a789a;
+  margin-top: 8px;
+}
+
+/* Alert Banner */
+.alertBanner {
+  background: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
   display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.mealTab {
-  padding: 8px 20px;
-  border-radius: 24px;
-  border: 1.5px solid #ddd;
-  background: white;
-  font-size: 13.5px;
+.alertIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alertBanner strong {
+  color: #ff4d6d;
   font-weight: 600;
-  color: #555;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: var(--font, 'DM Sans', sans-serif);
+  display: block;
+  margin-bottom: 4px;
 }
 
-.mealTab:hover {
-  border-color: #aaa;
-  color: #333;
+.alertBanner p {
+  color: #e8e6f0;
+  font-size: 0.88rem;
+  margin: 0;
 }
 
-.mealTabActive {
-  color: white !important;
-}
-
-.selectedCount {
-  margin-left: 8px;
-  font-size: 13px;
-  color: #3ea99f;
+/* Menu Title */
+.menuTitle {
+  font-size: 0.78rem;
+  color: #7a789a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
   font-weight: 500;
 }
 
-/* Calendar */
-.calendar {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #eee;
-}
-
-.calHead {
+/* Menu Grid */
+.menuGrid {
   display: grid;
-  grid-template-columns: 32px repeat(7, 1fr);
-  border-bottom: 1px solid #eee;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
-.weekCheck {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dayHeader {
-  text-align: center;
-  padding: 10px 4px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #888;
-}
-
-.calRow {
-  display: grid;
-  grid-template-columns: 32px repeat(7, 1fr);
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.calRow:last-child {
-  border-bottom: none;
-}
-
-.calCell {
-  min-height: 64px;
-  padding: 8px;
-  border-right: 1px solid #f5f5f5;
+.menuCard {
+  background: #13162a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 20px;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  transition: background 0.1s;
+  transition: all 0.2s;
   position: relative;
-  border: 1px solid transparent;
-  user-select: none;
 }
 
-.calCell:last-child {
-  border-right: none;
+.menuCard:hover {
+  border-color: rgba(240, 165, 0, 0.3);
+  transform: translateY(-2px);
 }
 
-.calCell:hover:not(.calPast) {
-  background: #f0fdf4;
+.menuCardSelected {
+  border-color: #f0a500 !important;
+  background: rgba(240, 165, 0, 0.06) !important;
 }
 
-.calPast {
+.menuCardOutOfStock {
   opacity: 0.45;
-  cursor: not-allowed;
+  pointer-events: none;
 }
 
-.calToday {
-  background: #fff8e1;
-}
-
-.calSelected {
-  border-radius: 4px;
-}
-
-.calDate {
-  font-size: 13px;
-  font-weight: 500;
-  color: #333;
-}
-
-.calMonth {
-  font-size: 9px;
-  color: #aaa;
-  letter-spacing: 0.5px;
-}
-
-.selectedBadge {
+.selectedCheck {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 18px;
-  height: 18px;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  background: #f0a500;
   border-radius: 50%;
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.65rem;
+  color: #000;
+  font-weight: bold;
 }
 
-/* Action bar */
-.actionBar {
+.foodEmoji {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+
+.foodName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #e8e6f0;
+  margin-bottom: 3px;
+}
+
+.foodDesc {
+  color: #7a789a;
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+}
+
+.foodPrice {
+  color: #f0a500;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.foodStock {
+  font-size: 0.72rem;
+}
+
+.stockOk {
+  color: #22c97a;
+}
+
+.stockLow {
+  color: #ff7b3a;
+}
+
+.stockZero {
+  color: #ff4d6d;
+}
+
+/* Order Bar */
+.orderBar {
+  background: #13162a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 18px 24px;
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding: 4px 0;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  bottom: 20px;
+  backdrop-filter: blur(10px);
 }
 
-.cancelBtn {
-  padding: 11px 24px;
-  background: white;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #555;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  font-family: var(--font, 'DM Sans', sans-serif);
-  transition: background 0.15s;
+.orderInfo {
+  font-size: 0.88rem;
+  color: #7a789a;
 }
 
-.cancelBtn:hover {
-  background: #f5f5f5;
+.orderInfo span {
+  color: #e8e6f0;
+  font-weight: 600;
 }
 
-.confirmBtn {
+.orderBtn {
   padding: 11px 28px;
-  background: #2d8a81;
+  background: linear-gradient(135deg, #f0a500, #ff7b3a);
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: white;
+  border-radius: 9px;
+  color: #000;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  letter-spacing: 0.5px;
-  font-family: var(--font, 'DM Sans', sans-serif);
-  display: flex;
-  align-items: center;
-  min-width: 110px;
-  justify-content: center;
-  min-height: 42px;
-  transition: background 0.15s;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  transition: all 0.2s;
 }
 
-.confirmBtn:hover:not(:disabled) {
-  background: #3ea99f;
+.orderBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
 }
 
-.confirmBtn:disabled {
-  opacity: 0.5;
+.orderBtn:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page {
+    padding: 18px;
+    margin: -20px -16px; /* Negate mobile padding */
+    width: calc(100% + 32px);
+  }
+
+  .iftarBanner {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .bannerRight {
+    text-align: center;
+  }
+
+  .menuGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .orderBar {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .orderBtn {
+    width: 100%;
+  }
 }

@@ -16,6 +16,8 @@ export default function CafeteriaPage() {
   const [orderModal, setOrderModal] = useState(null) // 'dinner' | 'emergency'
   const [orderLoading, setOrderLoading] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(null)
+  const [menu, setMenu] = useState([])
+  const [selectedItem, setSelectedItem] = useState(null)
 
   const studentId = user?.studentId || user?.email?.split('@')[0] || '—'
 
@@ -25,14 +27,16 @@ export default function CafeteriaPage() {
 
   async function fetchData() {
     try {
-      const [balanceRes, tokensRes, purchasesRes] = await Promise.allSettled([
+      const [balanceRes, tokensRes, purchasesRes, menuRes] = await Promise.allSettled([
         axios.get('/api/wallet/balance'),
         axios.get('/api/cafeteria/tokens'),
         axios.get('/api/cafeteria/purchases'),
+        axios.get('/api/menu'),
       ])
       if (balanceRes.status === 'fulfilled') setBalance(balanceRes.value.data.balance ?? 0)
       if (tokensRes.status === 'fulfilled') setTokens(tokensRes.value.data.tokens ?? [])
       if (purchasesRes.status === 'fulfilled') setPurchases(purchasesRes.value.data.purchases ?? [])
+      if (menuRes.status === 'fulfilled') setMenu(menuRes.value.data.items ?? [])
     } catch {}
   }
 
@@ -43,11 +47,13 @@ export default function CafeteriaPage() {
   }
 
   async function handleOrder(type) {
+    if (!selectedItem) return
     setOrderLoading(true)
     try {
-      const res = await axios.post('/api/orders', { type })
+      const res = await axios.post('/api/orders', { itemId: selectedItem.id, type })
       const orderId = res.data.orderId
       setOrderModal(null)
+      setSelectedItem(null)
       navigate(`/order/${orderId}`)
     } catch (err) {
       const msg = err.response?.data?.message || 'Order failed. Please try again.'
@@ -161,27 +167,35 @@ export default function CafeteriaPage() {
 
       {/* Order modal */}
       {orderModal && (
-        <div className={styles.modalOverlay} onClick={() => setOrderModal(null)}>
+        <div className={styles.modalOverlay} onClick={() => { setOrderModal(null); setSelectedItem(null) }}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h3 className={styles.modalTitle}>
               {orderModal === 'dinner' ? 'Buy Dinner' : 'Buy Emergency Coupon'}
             </h3>
-            <p className={styles.modalDesc}>
-              {orderModal === 'dinner'
-                ? 'Place a dinner order for today. Your meal will be prepared shortly.'
-                : 'Emergency coupons are for urgent meal needs. A limited number are available.'}
-            </p>
+            <p className={styles.modalDesc}>Select a menu item:</p>
+            <div className={styles.menuList}>
+              {menu.map(item => (
+                <button
+                  key={item.id}
+                  className={`${styles.menuItem} ${selectedItem?.id === item.id ? styles.menuItemSelected : ''}`}
+                  onClick={() => setSelectedItem(item)}
+                >
+                  <span className={styles.menuItemName}>{item.name}</span>
+                  <span className={styles.menuItemPrice}>৳{parseFloat(item.price).toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
             <p className={styles.modalBalance}>
               Current Balance: <strong>৳{balance.toFixed(2)}</strong>
             </p>
             <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => setOrderModal(null)}>
+              <button className={styles.modalCancel} onClick={() => { setOrderModal(null); setSelectedItem(null) }}>
                 CANCEL
               </button>
               <button
                 className={`${styles.modalConfirm} ${orderModal === 'emergency' ? styles.modalEmergency : ''}`}
                 onClick={() => handleOrder(orderModal)}
-                disabled={orderLoading}
+                disabled={orderLoading || !selectedItem}
               >
                 {orderLoading ? <span className="spinner" /> : 'CONFIRM'}
               </button>

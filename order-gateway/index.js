@@ -17,6 +17,26 @@ const REDIS_URL            = process.env.REDIS_URL            || 'redis://localh
 // ─── Metrics ───────────────────────────────────────────────────
 const metrics = { totalOrders: 0, failureCount: 0, totalLatency: 0, requestCount: 0 }
 
+// 30-second sliding window for latency monitoring (bonus challenge)
+const LATENCY_WINDOW_MS = 30000
+const latencyWindow = [] // Array of { timestamp, latencyMs }
+
+function recordLatency(latencyMs) {
+    const now = Date.now()
+    latencyWindow.push({ timestamp: now, latencyMs })
+    // Prune entries older than 30 seconds
+    while (latencyWindow.length > 0 && now - latencyWindow[0].timestamp > LATENCY_WINDOW_MS) {
+        latencyWindow.shift()
+    }
+}
+
+function getWindowedLatency() {
+    const now = Date.now()
+    const recent = latencyWindow.filter(e => now - e.timestamp <= LATENCY_WINDOW_MS)
+    if (recent.length === 0) return 0
+    return Math.round(recent.reduce((sum, e) => sum + e.latencyMs, 0) / recent.length)
+}
+
 // ─── Redis (optional - graceful degradation if not running) ────
 let redisClient = null
 try {
@@ -64,7 +84,7 @@ function requireAuth(req, res, next) {
 
 // ─── Routes ───────────────────────────────────────────────────
 
-// GET /menu — list all available menu items with stock
+// GET /menu
 app.get('/menu', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(`
@@ -82,7 +102,7 @@ app.get('/menu', requireAuth, async (req, res) => {
     }
 })
 
-// GET /orders/:orderId — get single order status (used by tracker polling)
+// GET /orders/:orderId
 app.get('/orders/:orderId', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
@@ -93,27 +113,51 @@ app.get('/orders/:orderId', requireAuth, async (req, res) => {
              WHERE o.order_id = $1 AND o.student_id = $2`,
             [req.params.orderId, req.user.studentId]
         )
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Order not found.' })
-        }
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Order not found.' })
         res.json(result.rows[0])
     } catch (err) {
         res.status(500).json({ message: 'Failed to fetch order.' })
     }
 })
 
-// POST /orders — place a new order
+// POST /orders
+// Supports X-Idempotency-Key header to handle partial failures safely.
+// If a request crashes after processing but before the client receives a response,
+// the client can safely retry with the same idempotency key and receive the original result.
 app.post('/orders', requireAuth, async (req, res) => {
     const start = Date.now()
     const { itemId, type = 'dinner' } = req.body
     const { studentId } = req.user
+    const idempotencyKey = req.headers['x-idempotency-key'] || null
 
     if (!itemId) return res.status(400).json({ message: 'itemId is required.' })
+
+    // ── Idempotency check: if key provided, check for existing order ──
+    if (idempotencyKey) {
+        try {
+            const existing = await pool.query(
+                `SELECT o.order_id, o.status, o.amount, m.name as item_name
+                 FROM orders o JOIN menu_items m ON m.id = o.item_id
+                 WHERE o.idempotency_key = $1 AND o.student_id = $2`,
+                [idempotencyKey, studentId]
+            )
+            if (existing.rows.length > 0) {
+                const prev = existing.rows[0]
+                return res.status(202).json({
+                    orderId: prev.order_id,
+                    message: 'Order already processed (idempotent retry).',
+                    item: prev.item_name,
+                    idempotent: true,
+                })
+            }
+        } catch (err) {
+            console.error('Idempotency lookup error:', err)
+        }
+    }
 
     const orderId = uuidv4()
 
     try {
-        // ── 1. Check Redis cache first ──────────────────────────────
         if (redisClient) {
             const cached = await redisClient.get(`stock:${itemId}`).catch(() => null)
             if (cached === '0') {
@@ -122,17 +166,13 @@ app.post('/orders', requireAuth, async (req, res) => {
             }
         }
 
-        // ── 2. Get item details ─────────────────────────────────────
         const itemResult = await pool.query(
             'SELECT id, name, price FROM menu_items WHERE id = $1 AND is_available = true',
             [itemId]
         )
-        if (itemResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Item not found.' })
-        }
+        if (itemResult.rows.length === 0) return res.status(404).json({ message: 'Item not found.' })
         const item = itemResult.rows[0]
 
-        // ── 3. Check wallet balance ─────────────────────────────────
         const balanceResult = await pool.query(
             `SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) AS balance
              FROM transactions WHERE student_id = $1`,
@@ -145,14 +185,12 @@ app.post('/orders', requireAuth, async (req, res) => {
             })
         }
 
-        // ── 4. Create order record (PENDING) ────────────────────────
         await pool.query(
-            `INSERT INTO orders (order_id, student_id, item_id, type, status, amount)
-             VALUES ($1, $2, $3, $4, 'PENDING', $5)`,
-            [orderId, studentId, itemId, type, item.price]
+            `INSERT INTO orders (order_id, idempotency_key, student_id, item_id, type, status, amount)
+             VALUES ($1, $2, $3, $4, $5, 'PENDING', $6)`,
+            [orderId, idempotencyKey, studentId, itemId, type, item.price]
         )
 
-        // ── 5. Deduct wallet balance ────────────────────────────────
         const newBalance = balance - item.price
         await pool.query(
             `INSERT INTO transactions (student_id, type, amount, balance_after, description, order_id)
@@ -160,57 +198,67 @@ app.post('/orders', requireAuth, async (req, res) => {
             [studentId, item.price, newBalance, `Meal order: ${item.name}`, orderId]
         )
 
-        // ── 6. Deduct stock via Stock Service ───────────────────────
         try {
-            await axios.post(`${STOCK_SERVICE_URL}/stock/${itemId}/decrement`, {}, { timeout: 3000 })
+            await axios.post(`${STOCK_SERVICE_URL}/stock/${itemId}/decrement`, {
+                orderId,
+            }, { timeout: 3000 })
         } catch (err) {
-            // Stock service down or out of stock — refund wallet and fail order
             await pool.query("UPDATE orders SET status = 'FAILED' WHERE order_id = $1", [orderId])
             await pool.query(
                 `INSERT INTO transactions (student_id, type, amount, balance_after, description, order_id)
                  VALUES ($1, 'credit', $2, $3, 'Refund: stock unavailable', $4)`,
                 [studentId, item.price, balance, orderId]
             )
-            const msg = err.response?.data?.message || 'Out of stock or stock service unavailable.'
             metrics.failureCount++
-            return res.status(409).json({ message: msg })
+            return res.status(409).json({ message: err.response?.data?.message || 'Out of stock.' })
         }
 
-        // ── 7. Update order to STOCK_VERIFIED ───────────────────────
         await pool.query(
             "UPDATE orders SET status = 'STOCK_VERIFIED', acknowledged_at = NOW() WHERE order_id = $1",
             [orderId]
         )
 
-        // ── 8. Push to Kitchen Queue ────────────────────────────────
         const orderMsg = { orderId, studentId, itemId, itemName: item.name, type, timestamp: new Date().toISOString() }
-
         if (rabbitChannel) {
             rabbitChannel.sendToQueue('orders', Buffer.from(JSON.stringify(orderMsg)), { persistent: true })
         } else {
-            // No RabbitMQ — simulate kitchen directly
             simulateKitchen(orderMsg)
         }
 
-        // ── 9. Respond immediately (<2s) ────────────────────────────
         metrics.totalOrders++
         metrics.requestCount++
-        metrics.totalLatency += Date.now() - start
+        const latency = Date.now() - start
+        metrics.totalLatency += latency
+        recordLatency(latency)
 
-        return res.status(202).json({
-            orderId,
-            message: 'Order received! Track your status below.',
-            item: item.name,
-        })
+        return res.status(202).json({ orderId, message: 'Order received! Track your status below.', item: item.name })
 
     } catch (err) {
+        // Handle unique constraint violation on idempotency_key (concurrent duplicate request)
+        if (err.code === '23505' && err.constraint && idempotencyKey) {
+            const existing = await pool.query(
+                `SELECT o.order_id, o.status, m.name as item_name
+                 FROM orders o JOIN menu_items m ON m.id = o.item_id
+                 WHERE o.idempotency_key = $1`,
+                [idempotencyKey]
+            ).catch(() => ({ rows: [] }))
+            if (existing.rows.length > 0) {
+                const prev = existing.rows[0]
+                return res.status(202).json({
+                    orderId: prev.order_id,
+                    message: 'Order already processed (idempotent retry).',
+                    item: prev.item_name,
+                    idempotent: true,
+                })
+            }
+        }
         console.error('Order error:', err)
         metrics.failureCount++
         return res.status(500).json({ message: 'Internal server error.' })
     }
 })
 
-// POST /cafeteria/tokens/bulk — Ramadan advance token booking
+// POST /cafeteria/tokens/bulk
 app.post('/cafeteria/tokens/bulk', requireAuth, async (req, res) => {
     const { tokens } = req.body
     const { studentId } = req.user
@@ -218,13 +266,11 @@ app.post('/cafeteria/tokens/bulk', requireAuth, async (req, res) => {
         return res.status(400).json({ message: 'tokens array is required.' })
     }
 
-    // Token prices
     const TOKEN_PRICE = { dinner: 120.00, iftar: 100.00 }
     const totalCost = tokens.reduce((sum, t) => sum + (TOKEN_PRICE[t.type] || 120), 0)
     const orderId = uuidv4()
 
     try {
-        // ── 1. Check wallet balance ───────────────────────────────
         const balanceResult = await pool.query(
             `SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) AS balance
              FROM transactions WHERE student_id = $1`,
@@ -237,25 +283,20 @@ app.post('/cafeteria/tokens/bulk', requireAuth, async (req, res) => {
             })
         }
 
-        // ── 2. Insert tokens ──────────────────────────────────────
-        let inserted = 0
+        const insertedTokens = []
         for (const t of tokens) {
             const result = await pool.query(
                 `INSERT INTO tokens (student_id, type, meal_date, order_id)
                  VALUES ($1, $2, $3, $4) ON CONFLICT (student_id, type, meal_date) DO NOTHING`,
                 [studentId, t.type, t.date, orderId]
             )
-            if (result.rowCount > 0) inserted++
+            if (result.rowCount > 0) insertedTokens.push(t)
         }
+        const inserted = insertedTokens.length
 
-        if (inserted === 0) {
-            return res.status(409).json({ message: 'All selected tokens already exist.' })
-        }
+        if (inserted === 0) return res.status(409).json({ message: 'All selected tokens already exist.' })
 
-        // ── 3. Deduct wallet for inserted tokens only ─────────────
-        const actualCost = tokens
-            .slice(0, inserted)
-            .reduce((sum, t) => sum + (TOKEN_PRICE[t.type] || 120), 0)
+        const actualCost = insertedTokens.reduce((sum, t) => sum + (TOKEN_PRICE[t.type] || 120), 0)
         const newBalance = balance - actualCost
 
         await pool.query(
@@ -264,13 +305,8 @@ app.post('/cafeteria/tokens/bulk', requireAuth, async (req, res) => {
             [studentId, actualCost, newBalance, `Token booking: ${inserted} meal token(s)`, orderId]
         )
 
-        res.status(202).json({
-            orderId,
-            inserted,
-            totalCost: actualCost,
-            newBalance,
-            message: `${inserted} token(s) booked. ৳${actualCost.toFixed(2)} deducted from wallet.`
-        })
+        res.status(202).json({ orderId, inserted, totalCost: actualCost, newBalance,
+            message: `${inserted} token(s) booked. ৳${actualCost.toFixed(2)} deducted from wallet.` })
 
     } catch (err) {
         console.error('Token booking error:', err)
@@ -278,7 +314,7 @@ app.post('/cafeteria/tokens/bulk', requireAuth, async (req, res) => {
     }
 })
 
-// GET /cafeteria/tokens — get student's available tokens
+// GET /cafeteria/tokens
 app.get('/cafeteria/tokens', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
@@ -293,7 +329,7 @@ app.get('/cafeteria/tokens', requireAuth, async (req, res) => {
     }
 })
 
-// GET /cafeteria/purchases — get purchased meals calendar
+// GET /cafeteria/purchases
 app.get('/cafeteria/purchases', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
@@ -336,22 +372,74 @@ app.get('/wallet/transactions', requireAuth, async (req, res) => {
     }
 })
 
-// ─── Health & Metrics ──────────────────────────────────────────
-app.get('/health', async (req, res) => {
+// POST /wallet/topup ── NEW ─────────────────────────────────────
+app.post('/wallet/topup', requireAuth, async (req, res) => {
+    const { amount, method = 'bkash', reference } = req.body
+    const { studentId } = req.user
+
+    if (!amount || isNaN(amount) || parseFloat(amount) < 10) {
+        return res.status(400).json({ message: 'Minimum top-up amount is ৳10.' })
+    }
+
+    const amt = parseFloat(parseFloat(amount).toFixed(2))
+
     try {
-        await pool.query('SELECT 1')
-        res.status(200).json({ status: 'healthy', service: 'order-gateway', timestamp: new Date().toISOString() })
+        const balResult = await pool.query(
+            `SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) AS balance
+             FROM transactions WHERE student_id = $1`,
+            [studentId]
+        )
+        const currentBalance = parseFloat(balResult.rows[0].balance)
+        const newBalance = parseFloat((currentBalance + amt).toFixed(2))
+
+        const methodLabels = {
+            bkash:  'bKash Top-up',
+            nagad:  'Nagad Top-up',
+            rocket: 'Rocket Top-up',
+            bank:   'Bank Transfer',
+        }
+        const description = `${methodLabels[method] || 'Wallet Top-up'}${reference ? ` · ${reference}` : ''}`
+
+        await pool.query(
+            `INSERT INTO transactions (student_id, type, amount, balance_after, description)
+             VALUES ($1, 'credit', $2, $3, $4)`,
+            [studentId, amt, newBalance, description]
+        )
+
+        return res.status(200).json({ message: 'Wallet topped up successfully.', amount: amt, newBalance, method })
     } catch (err) {
-        res.status(503).json({ status: 'unhealthy', reason: err.message })
+        console.error('Top-up error:', err)
+        return res.status(500).json({ message: 'Top-up failed. Please try again.' })
     }
 })
 
+// ─── Health & Metrics ──────────────────────────────────────────
+app.get('/health', async (req, res) => {
+    const deps = { database: 'connected', redis: 'connected', rabbitmq: 'connected' }
+    try { await pool.query('SELECT 1') } catch { deps.database = 'disconnected' }
+    if (redisClient) {
+        try { await redisClient.ping() } catch { deps.redis = 'disconnected' }
+    } else { deps.redis = 'not_configured' }
+    if (!rabbitChannel) deps.rabbitmq = 'disconnected'
+    const healthy = deps.database === 'connected'
+    res.status(healthy ? 200 : 503).json({
+        status: healthy ? 'healthy' : 'unhealthy',
+        service: 'order-gateway',
+        dependencies: deps,
+        timestamp: new Date().toISOString(),
+    })
+})
+
 app.get('/metrics', (req, res) => {
+    const windowedLatency = getWindowedLatency()
     res.json({
-        totalOrders:      metrics.totalOrders,
-        failureCount:     metrics.failureCount,
-        averageLatencyMs: metrics.requestCount > 0 ? Math.round(metrics.totalLatency / metrics.requestCount) : 0,
-        uptime:           process.uptime(),
+        totalOrders:           metrics.totalOrders,
+        failureCount:          metrics.failureCount,
+        averageLatencyMs:      metrics.requestCount > 0 ? Math.round(metrics.totalLatency / metrics.requestCount) : 0,
+        averageLatencyMs30s:   windowedLatency,
+        latencyAlert:          windowedLatency > 1000,
+        windowSampleCount:     latencyWindow.length,
+        uptime:                process.uptime(),
     })
 })
 

@@ -1,2 +1,37 @@
+name: CI
+
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install stock-service dependencies
+        working-directory: stock-service
+        run: npm install
+
+      - name: Run stock-service tests
+        working-directory: stock-service
+        run: npm test
+
+      - name: Install order-gateway dependencies
+        working-directory: order-gateway
+        run: npm install
+
+      - name: Run order-gateway tests
+        working-directory: order-gateway
+        run: npm test

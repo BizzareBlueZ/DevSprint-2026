@@ -208,7 +208,7 @@ app.post('/admin/login', async (req, res) => {
     if (!passwordMatch) return res.status(401).json({ message: 'Invalid credentials.' })
     await pool.query('UPDATE admins SET last_login_at = NOW() WHERE id = $1', [admin.id])
     const payload = { adminId: admin.id, username: admin.username, fullName: admin.full_name, role: admin.role, isAdmin: true }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' })
     return res.status(200).json({ token, admin: payload })
   } catch (err) {
     console.error('Admin login error:', err)

@@ -340,3 +340,45 @@
 .modalEmergency:hover:not(:disabled) {
   background: #c0392b;
 }
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.menuItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.menuItem:hover {
+  border-color: #3ea99f;
+  background: #f0fafa;
+}
+
+.menuItemSelected {
+  border-color: #3ea99f;
+  background: #e6f7f6;
+}
+
+.menuItemName {
+  color: #1a202c;
+  font-weight: 500;
+}
+
+.menuItemPrice {
+  color: #3ea99f;
+  font-weight: 600;
+}
