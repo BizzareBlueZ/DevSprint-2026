@@ -99,6 +99,63 @@ CREATE TABLE public.transactions (
 CREATE INDEX idx_transactions_student_id ON public.transactions(student_id);
 CREATE INDEX idx_transactions_created_at ON public.transactions(created_at);
 
+-- ============================================================
+-- INVENTORY SCHEMA - Stock Service
+-- ============================================================
+
+-- STOCK TABLE
+-- ============================================================
+CREATE TABLE inventory.stock (
+    id         SERIAL PRIMARY KEY,
+    item_id    INTEGER NOT NULL REFERENCES public.menu_items(id),
+    quantity   INTEGER NOT NULL DEFAULT 0,
+    version    INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_stock_item_id ON inventory.stock(item_id);
+
+-- ============================================================
+-- ORDERS SCHEMA - Order Gateway Service
+-- ============================================================
+
+-- ORDERS TABLE
+-- ============================================================
+CREATE TABLE orders.orders (
+    id              SERIAL PRIMARY KEY,
+    order_id        VARCHAR(50) UNIQUE NOT NULL,
+    student_id      VARCHAR(20) NOT NULL,
+    item_id         INTEGER NOT NULL REFERENCES public.menu_items(id),
+    type            VARCHAR(20) NOT NULL DEFAULT 'dinner',
+    status          VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    amount          DECIMAL(10,2) NOT NULL,
+    meal_date       DATE DEFAULT CURRENT_DATE,
+    idempotency_key VARCHAR(100),
+    acknowledged_at TIMESTAMP,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_orders_student_id ON orders.orders(student_id);
+CREATE INDEX idx_orders_status ON orders.orders(status);
+CREATE INDEX idx_orders_idempotency ON orders.orders(idempotency_key);
+
+-- TOKENS TABLE (Ramadan meal tokens)
+-- ============================================================
+CREATE TABLE orders.tokens (
+    id         SERIAL PRIMARY KEY,
+    student_id VARCHAR(20) NOT NULL,
+    type       VARCHAR(20) NOT NULL DEFAULT 'dinner',
+    meal_date  DATE NOT NULL DEFAULT CURRENT_DATE,
+    is_used    BOOLEAN NOT NULL DEFAULT false,
+    order_id   VARCHAR(50),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id, type, meal_date)
+);
+
+CREATE INDEX idx_tokens_student_id ON orders.tokens(student_id);
+CREATE INDEX idx_tokens_meal_date ON orders.tokens(meal_date);
+
 -- WALLET BALANCES MATERIALIZED VIEW (better performance than regular view)
 -- This materializes the wallet calculation and will be refreshed periodically
 -- ============================================================
