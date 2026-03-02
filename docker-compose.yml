@@ -10,8 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init-microservices.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ./database/migrations:/docker-entrypoint-initdb.d/migrations
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
     networks:
       - cafeteria-net
     healthcheck:
