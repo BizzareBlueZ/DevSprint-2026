@@ -20,13 +20,16 @@ export default function OrderTrackerPage() {
   const [error, setError]         = useState('')
   const [qrCode, setQrCode]       = useState(null)
 
+  const socketUrl = (import.meta.env.VITE_SOCKET_URL || window.location.origin).replace(/\/$/, '')
+  const socketPath = import.meta.env.VITE_SOCKET_PATH || '/socket.io'
+
   useEffect(() => {
     // Fetch QR code
     axios.get(`/api/orders/${orderId}/qr`)
       .then(res => setQrCode(res.data.qrCode))
       .catch(() => {})
     
-    const socket = io('http://localhost:3004', { transports: ['websocket', 'polling'] })
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'], path: socketPath })
     socket.on('connect',       () => { setConnected(true); socket.emit('join-order', { orderId }) })
     socket.on('disconnect',    () => setConnected(false))
     socket.on('connect_error', () => setError('Live updates unavailable — refresh to check status.'))

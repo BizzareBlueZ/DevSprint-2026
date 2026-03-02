@@ -18,12 +18,16 @@ export function useOrderNotifications() {
   const navigate = useNavigate()
   const socketRef = useRef(null)
 
+  const socketUrl = (import.meta.env.VITE_SOCKET_URL || window.location.origin).replace(/\/$/, '')
+  const socketPath = import.meta.env.VITE_SOCKET_PATH || '/socket.io'
+
   useEffect(() => {
     const studentId = user?.studentId
     if (!studentId) return
 
-    const socket = io('http://localhost:3004', {
+    const socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
+      path: socketPath,
     })
     socketRef.current = socket
 
