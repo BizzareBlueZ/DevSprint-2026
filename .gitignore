@@ -30,6 +30,7 @@ build/
 .tmp/
 temp/
 *.log
+tmpclaude-*-cwd
 
 # OS files
 Thumbs.db
