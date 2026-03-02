@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { parseStudentId } from '../utils/studentIdParser'
 import { usePushNotifications } from '../hooks/usePushNotifications'
+import { useLanguage } from '../context/LanguageContext'
 import styles from './AccountPage.module.css'
 
 export default function AccountPage() {
@@ -10,6 +11,7 @@ export default function AccountPage() {
   const navigate = useNavigate()
   const fileRef = useRef(null)
   const { isSupported, isSubscribed, permission, loading: pushLoading, toggle: togglePush } = usePushNotifications()
+  const { t } = useLanguage()
   const studentId = user?.studentId || user?.email?.split('@')[0] || '—'
   
   // Parse student ID to extract year and department
@@ -37,11 +39,11 @@ export default function AccountPage() {
   }
 
   const details = [
-    { label: 'Full Name',   value: user?.name || '—',       icon: '👤' },
-    { label: 'Email',       value: user?.email || '—',      icon: '📧' },
-    { label: 'Student ID',  value: studentId,               icon: '🪪' },
-    { label: 'Department',  value: department,              icon: '🏛️' },
-    { label: 'Year',        value: year,                    icon: '📅' },
+    { label: t('fullName'),   value: user?.name || '—',       icon: '👤' },
+    { label: t('email'),      value: user?.email || '—',      icon: '📧' },
+    { label: t('studentId'),  value: studentId,               icon: '🪪' },
+    { label: t('department'), value: department,              icon: '🏛️' },
+    { label: t('year'),       value: year,                    icon: '📅' },
   ]
 
   return (
@@ -81,7 +83,7 @@ export default function AccountPage() {
       {/* Details card */}
       <div className={styles.detailsCard}>
         <div className={styles.cardHeader}>
-          <h2 className={styles.cardTitle}>Account Details</h2>
+          <h2 className={styles.cardTitle}>{t('accountDetails')}</h2>
         </div>
         {details.map((d, i) => (
           <div key={i} className={styles.row}>
@@ -98,19 +100,19 @@ export default function AccountPage() {
       {isSupported && (
         <div className={styles.detailsCard}>
           <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Notifications</h2>
+            <h2 className={styles.cardTitle}>{t('notifications')}</h2>
           </div>
           <div className={styles.notificationRow}>
             <div className={styles.notificationInfo}>
               <span className={styles.notificationIcon}>🔔</span>
               <div className={styles.notificationText}>
-                <span className={styles.notificationLabel}>Push Notifications</span>
+                <span className={styles.notificationLabel}>{t('enableNotifications')}</span>
                 <span className={styles.notificationDesc}>
                   {permission === 'denied' 
-                    ? 'Blocked by browser - enable in settings'
+                    ? t('notificationsBlocked')
                     : isSubscribed 
-                      ? 'You will be notified when your order is ready' 
-                      : 'Get notified when your food is ready for pickup'}
+                      ? t('notificationsActive')
+                      : t('pushGetNotified')}
                 </span>
               </div>
             </div>
@@ -134,7 +136,7 @@ export default function AccountPage() {
               <line x1="15" y1="9" x2="9" y2="15"/>
               <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
-            Remove Photo
+            {t('removePhoto')}
           </button>
         )}
         <button className={styles.logoutBtn} onClick={handleLogout}>
@@ -143,7 +145,7 @@ export default function AccountPage() {
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
-          Sign Out
+          {t('signOut')}
         </button>
       </div>
     </div>

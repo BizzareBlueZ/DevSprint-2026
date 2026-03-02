@@ -94,6 +94,9 @@ const translations = {
         enableNotifications: 'Enable Notifications',
         notificationsEnabled: 'Notifications Enabled',
         orderReady: 'Your order is ready for pickup!',
+        notificationsBlocked: 'Blocked by browser — enable in settings',
+        notificationsActive: 'You will be notified when your order is ready',
+        pushGetNotified: 'Get notified when your food is ready for pickup',
         
         // Language
         language: 'Language',
@@ -259,6 +262,9 @@ const translations = {
         enableNotifications: 'বিজ্ঞপ্তি সক্ষম করুন',
         notificationsEnabled: 'বিজ্ঞপ্তি সক্ষম',
         orderReady: 'আপনার অর্ডার পিকআপের জন্য প্রস্তুত!',
+        notificationsBlocked: 'ব্রাউজার ব্লক করেছে — সেটিংস থেকে চালু করুন',
+        notificationsActive: 'আপনার অর্ডার প্রস্তুত হলে আপনাকে জানানো হবে',
+        pushGetNotified: 'আপনার খাবার পিকআপের জন্য প্রস্তুত হলে জানুন',
         
         // Language
         language: 'ভাষা',

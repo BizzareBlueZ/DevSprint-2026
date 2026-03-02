@@ -94,13 +94,17 @@ export function usePushNotifications() {
         applicationServerKey
       })
       
-      // Send subscription to server
+      // Send subscription to server (backend expects { subscription: { endpoint, keys: { p256dh, auth } } })
       const subJson = sub.toJSON()
       await axios.post('/api/auth/push/subscribe', {
-        endpoint: subJson.endpoint,
-        p256dh: subJson.keys.p256dh,
-        auth: subJson.keys.auth
-      })
+        subscription: {
+          endpoint: subJson.endpoint,
+          keys: {
+            p256dh: subJson.keys.p256dh,
+            auth: subJson.keys.auth
+          }
+        }
+      }, { withCredentials: true })
       
       setSubscription(sub)
       setIsSubscribed(true)
