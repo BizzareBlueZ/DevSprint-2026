@@ -19,8 +19,8 @@ export default function StockAlerts() {
                 axios.get('/admin/stock/admin/stock'),
                 axios.get('/admin/stock/admin/stock/alerts')
             ])
-            setStock(stockRes.data)
-            setAlerts(alertsRes.data)
+            setStock(stockRes.data.items || [])
+            setAlerts(alertsRes.data.alerts || [])
         } catch (err) {
             console.error('Failed to fetch stock data:', err)
         } finally {

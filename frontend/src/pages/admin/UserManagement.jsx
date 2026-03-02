@@ -14,7 +14,7 @@ export default function UserManagement() {
     async function fetchUsers() {
         try {
             const res = await axios.get('/admin/identity/admin/users')
-            setUsers(res.data)
+            setUsers(res.data.users || [])
         } catch (err) {
             console.error('Failed to fetch users:', err)
         } finally {
@@ -36,12 +36,12 @@ export default function UserManagement() {
     }
 
     async function toggleUserStatus(user) {
-        const newStatus = user.status === 'active' ? 'suspended' : 'active'
+        const newIsActive = !user.is_active
         try {
-            await axios.put(`/admin/identity/admin/users/${user.student_id}/status`, { status: newStatus })
-            setUsers(users.map(u => u.student_id === user.student_id ? { ...u, status: newStatus } : u))
+            await axios.put(`/admin/identity/admin/users/${user.student_id}/status`, { is_active: newIsActive })
+            setUsers(users.map(u => u.student_id === user.student_id ? { ...u, is_active: newIsActive } : u))
             if (selectedUser?.student_id === user.student_id) {
-                setUserActivity(prev => prev ? { ...prev, status: newStatus } : null)
+                setUserActivity(prev => prev ? { ...prev, user: { ...prev.user, is_active: newIsActive } } : null)
             }
         } catch (err) {
             alert('Failed to update user status')
@@ -87,8 +87,8 @@ export default function UserManagement() {
                                 <td>{user.order_count}</td>
                                 <td className={styles.revenue}>৳{parseFloat(user.total_spent || 0).toFixed(0)}</td>
                                 <td>
-                                    <span className={`${styles.badge} ${user.status === 'active' ? styles.badgeSuccess : styles.badgeDanger}`}>
-                                        {user.status}
+                                    <span className={`${styles.badge} ${user.is_active ? styles.badgeSuccess : styles.badgeDanger}`}>
+                                        {user.is_active ? 'Active' : 'Suspended'}
                                     </span>
                                 </td>
                                 <td className={styles.actions}>
@@ -96,10 +96,10 @@ export default function UserManagement() {
                                         View Activity
                                     </button>
                                     <button 
-                                        className={user.status === 'active' ? styles.btnDanger : styles.btnSuccess}
+                                        className={user.is_active ? styles.btnDanger : styles.btnSuccess}
                                         onClick={() => toggleUserStatus(user)}
                                     >
-                                        {user.status === 'active' ? 'Suspend' : 'Reactivate'}
+                                        {user.is_active ? 'Suspend' : 'Reactivate'}
                                     </button>
                                 </td>
                             </tr>
@@ -125,16 +125,15 @@ export default function UserManagement() {
                             ) : userActivity ? (
                                 <div className={styles.activityContent}>
                                     <div className={styles.userInfo}>
-                                        <p><strong>Student ID:</strong> {userActivity.student_id}</p>
-                                        <p><strong>Name:</strong> {userActivity.name}</p>
-                                        <p><strong>Department:</strong> {userActivity.department}</p>
-                                        <p><strong>Batch:</strong> {userActivity.batch}</p>
+                                        <p><strong>Student ID:</strong> {userActivity.user?.student_id}</p>
+                                        <p><strong>Name:</strong> {userActivity.user?.name}</p>
+                                        <p><strong>Department:</strong> {userActivity.user?.department}</p>
                                         <p><strong>Status:</strong> 
-                                            <span className={`${styles.badge} ${userActivity.status === 'active' ? styles.badgeSuccess : styles.badgeDanger}`} style={{ marginLeft: '8px' }}>
-                                                {userActivity.status}
+                                            <span className={`${styles.badge} ${userActivity.user?.is_active ? styles.badgeSuccess : styles.badgeDanger}`} style={{ marginLeft: '8px' }}>
+                                                {userActivity.user?.is_active ? 'Active' : 'Suspended'}
                                             </span>
                                         </p>
-                                        <p><strong>Registered:</strong> {new Date(userActivity.created_at).toLocaleDateString()}</p>
+                                        <p><strong>Registered:</strong> {userActivity.user?.created_at ? new Date(userActivity.user.created_at).toLocaleDateString() : '—'}</p>
                                     </div>
                                     
                                     <h3 style={{ marginTop: '1rem' }}>Recent Orders</h3>
@@ -149,10 +148,10 @@ export default function UserManagement() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {userActivity.recent_orders?.map(order => (
+                                                {userActivity.orders?.map(order => (
                                                     <tr key={order.id}>
-                                                        <td>#{order.id}</td>
-                                                        <td className={styles.revenue}>৳{parseFloat(order.total_amount).toFixed(2)}</td>
+                                                        <td>#{order.order_id || order.id}</td>
+                                                        <td className={styles.revenue}>৳{parseFloat(order.amount || order.total_amount || 0).toFixed(2)}</td>
                                                         <td>
                                                             <span className={`${styles.badge} ${
                                                                 order.status === 'completed' ? styles.badgeSuccess :
@@ -164,7 +163,7 @@ export default function UserManagement() {
                                                         <td>{new Date(order.created_at).toLocaleDateString()}</td>
                                                     </tr>
                                                 ))}
-                                                {(!userActivity.recent_orders || userActivity.recent_orders.length === 0) && (
+                                                {(!userActivity.orders || userActivity.orders.length === 0) && (
                                                     <tr><td colSpan="4" className={styles.empty}>No orders yet</td></tr>
                                                 )}
                                             </tbody>
@@ -173,10 +172,10 @@ export default function UserManagement() {
 
                                     <div className={styles.modalActions}>
                                         <button 
-                                            className={userActivity.status === 'active' ? styles.btnDanger : styles.btnSuccess}
-                                            onClick={() => toggleUserStatus(userActivity)}
+                                            className={userActivity.user?.is_active ? styles.btnDanger : styles.btnSuccess}
+                                            onClick={() => toggleUserStatus(userActivity.user)}
                                         >
-                                            {userActivity.status === 'active' ? '🚫 Suspend Account' : '✅ Reactivate Account'}
+                                            {userActivity.user?.is_active ? '🚫 Suspend Account' : '✅ Reactivate Account'}
                                         </button>
                                     </div>
                                 </div>
