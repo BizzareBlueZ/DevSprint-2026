@@ -1,100 +1,111 @@
-# IUT Cafeteria — Frontend & Database
+# IUT Cafeteria — Microservices Platform
 
 DevSprint 2026 · IUT Computer Society
 
+Minimal setup and usage notes. (Requirement analysis and stack report are provided separately.)
+
 ---
 
-## Quick Start (Dev Mode)
+## Run (Recommended: Docker Compose)
+
+```bash
+docker-compose up --build
+```
+
+Open:
+
+- Frontend: http://localhost/
+- RabbitMQ UI: http://localhost:15672 (guest/guest)
+- pgAdmin: http://localhost:5050
+
+Service ports:
+
+- `order-gateway`: 3000
+- `identity-provider`: 3001
+- `stock-service`: 3002
+- `kitchen-queue`: 3003
+- `notification-hub`: 3004
+
+---
+
+## Local Dev (Frontend)
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
-# → http://localhost:5173
+# http://localhost:5173
 ```
 
-**Test credentials:**
+Frontend dev proxy:
 
-| Student ID | Email | Password |
-|---|---|---|
-| 230042135 | 230042135@iut-dhaka.edu | password123 |
-| 220041001 | 220041001@iut-dhaka.edu | password123 |
-| 230041002 | 230041002@iut-dhaka.edu | password123 |
+- `/api/auth/*` → `http://localhost:3001`
+- `/api/*` → `http://localhost:3000`
 
 ---
 
-## Frontend Pages
+## Test Accounts (Seeded)
 
-| Route | Page | Description |
-|---|---|---|
-| `/login` | Login | IUT email + password authentication |
-| `/apps` | Apps | Home dashboard with app tiles |
-| `/apps/cafeteria` | Cafeteria | Buy dinner / emergency coupons + calendar |
-| `/apps/cafeteria-ramadan` | Ramadan | Advance token booking with date picker |
-| `/apps/wallet` | Wallet | SmartCard balance + transaction history |
-| `/order/:id` | Order Tracker | Real-time status (Pending → Ready) via WebSocket |
-| `/account` | Account | Student profile |
+The database seed in `database/init.sql` includes students and admins.
+
+Students (password: `password123`):
+
+| Student ID | Email                   |
+| ---------- | ----------------------- |
+| 230042135  | 230042135@iut-dhaka.edu |
+| 220041001  | 220041001@iut-dhaka.edu |
+| 230041002  | 230041002@iut-dhaka.edu |
+
+Admins:
+
+- `admin` / `admin123`
+- `iutcs` / `devsprint2026`
 
 ---
 
-## Database Setup
+## Real-time Order Tracking
+
+Order status updates are delivered via Socket.io from `notification-hub` (port 3004).
+
+Flow (high-level):
+
+1. Frontend joins an order room (by `orderId`).
+2. `kitchen-queue` updates order status and POSTs to `notification-hub`.
+3. The client receives `order-status` events until READY.
+
+---
+
+## Database Notes
+
+Schema is initialized automatically in Docker via `database/init.sql`.
+
+The database uses separate schemas for service isolation:
+
+- `identity` (students/admins)
+- `orders` (orders, tokens)
+- `inventory` (stock)
+- `public` (menu_items, transactions, wallet_balances_materialized)
+
+---
+
+## Useful Commands
+
+Run a backend service locally (example):
 
 ```bash
-# With PostgreSQL running locally:
-psql -U postgres -f database/init.sql
-
-# Or via Docker:
-docker run --name iut-postgres \
-  -e POSTGRES_DB=cafeteria \
-  -e POSTGRES_USER=admin \
-  -e POSTGRES_PASSWORD=secret123 \
-  -v $(pwd)/database/init.sql:/docker-entrypoint-initdb.d/init.sql \
-  -p 5432:5432 -d postgres:15-alpine
+cd order-gateway
+npm ci
+npm run dev
 ```
 
-### Schema Overview
+Tests (where available):
 
-```
-students        — IUT student accounts (email-based login)
-menu_items      — Cafeteria food offerings
-stock           — Inventory with optimistic locking (version column)
-orders          — All meal orders with status tracking
-tokens          — Pre-purchased meal tokens (Ramadan)
-transactions    — SmartCard wallet ledger
-wallet_balances — View: computed balance per student
+```bash
+cd order-gateway
+npm test
+
+cd ..\stock-service
+npm test
 ```
 
-### Optimistic Locking (Stock)
-
-The `stock` table uses a `version` column to prevent overselling:
-
-```sql
-UPDATE stock
-SET quantity = quantity - 1, version = version + 1
-WHERE item_id = $1 AND version = $2 AND quantity > 0;
--- If 0 rows affected → conflict, retry or reject
-```
-
----
-
-## Environment Variables (frontend dev)
-
-The Vite dev server proxies API calls:
-- `/api/auth/*` → `http://localhost:3001`  (Identity Provider)
-- `/api/*`      → `http://localhost:3000`  (Order Gateway)
-
-In production Docker, nginx handles the proxying.
-
----
-
-## Tech Stack
-
-| Layer | Choice | Why |
-|---|---|---|
-| UI Framework | React 18 + Vite | Fast HMR, React state for live updates |
-| Routing | React Router v6 | SPA navigation |
-| HTTP | Axios | Interceptors for JWT injection |
-| Real-time | Socket.IO client | WebSocket order tracker |
-| Date utils | date-fns | Calendar & formatting |
-| Database | PostgreSQL 15 | ACID, optimistic locking |
-| Auth | JWT (bcrypt passwords) | Stateless, no DB call on validation |
+Dependency installs are reproducible via per-service `package-lock.json` files (use `npm ci`).
