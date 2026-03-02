@@ -1,0 +1,616 @@
+/* Shared Admin Pages Styles */
+.page {
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #f0f4f8;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 0.25rem;
+}
+
+.subtitle {
+    color: #666;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.refreshBtn {
+    background: #0d9488;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.refreshBtn:hover {
+    background: #0f766e;
+}
+
+/* Table Styles */
+.tableWrap {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.table th {
+    background: #f8fafc;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btnPrimary {
+    background: #0d9488;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btnPrimary:hover {
+    background: #0f766e;
+}
+
+.btnEdit {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btnEdit:hover {
+    background: #2563eb;
+}
+
+.btnDanger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btnDanger:hover {
+    background: #dc2626;
+}
+
+.btnSuccess {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btnSuccess:hover {
+    background: #059669;
+}
+
+.btnSecondary {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btnSecondary:hover {
+    background: #4b5563;
+}
+
+.btnView {
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btnView:hover {
+    background: #7c3aed;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badgeSuccess {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badgeDanger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badgeWarning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badgeInfo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Modal */
+.modalBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modalHeader h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1a1a2e;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.closeBtn:hover {
+    color: #374151;
+}
+
+.modalBody {
+    padding: 1.5rem;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Form */
+.formGroup {
+    margin-bottom: 1rem;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+    outline: none;
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Inline input for tables */
+.inlineInput {
+    width: 70px;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.statCard {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+.statIcon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.statValue {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.statLabel {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+/* Analytics Grid */
+.analyticsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.analyticsCard {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.analyticsCard h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    color: #374151;
+}
+
+.analyticsCard.fullWidth {
+    grid-column: 1 / -1;
+}
+
+/* List Items */
+.listContainer {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.listItem {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 0.75rem;
+}
+
+.listItem:last-child {
+    border-bottom: none;
+}
+
+.rank {
+    font-weight: 600;
+    color: #0d9488;
+    min-width: 30px;
+}
+
+.listItemInfo {
+    flex: 1;
+}
+
+.listItemName {
+    font-weight: 500;
+    color: #1a1a2e;
+    display: block;
+}
+
+.listItemMeta {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.listItemStats {
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+.listItemStats span {
+    display: block;
+}
+
+.revenue {
+    color: #059669;
+    font-weight: 500;
+}
+
+/* Peak Times Chart */
+.peakTimesChart {
+    display: flex;
+    align-items: flex-end;
+    height: 150px;
+    gap: 2px;
+    padding: 0.5rem 0;
+}
+
+.timeBar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.bar {
+    width: 100%;
+    background: linear-gradient(to top, #0d9488, #5eead4);
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: height 0.3s;
+}
+
+.bar:hover {
+    background: linear-gradient(to top, #0f766e, #2dd4bf);
+}
+
+.timeLabel {
+    font-size: 0.6rem;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+.chartLegend {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+/* Stock Alert Specific */
+.alertSummary {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.alertCard {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: white;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    flex: 1;
+    min-width: 200px;
+}
+
+.alertCard.alertDanger {
+    background: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+
+.alertCard.alertSuccess {
+    background: #f0fdf4;
+    border-left: 4px solid #10b981;
+}
+
+.alertIcon {
+    font-size: 1.5rem;
+}
+
+.viewToggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.toggleBtn {
+    background: #f1f5f9;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.toggleBtn:hover {
+    background: #e5e7eb;
+}
+
+.toggleBtn.active {
+    background: #0d9488;
+    color: white;
+    border-color: #0d9488;
+}
+
+.lowStockRow {
+    background: #fef2f2 !important;
+}
+
+.textDanger {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.infoPanel {
+    margin-top: 1.5rem;
+    background: #f0f9ff;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    border-left: 4px solid #3b82f6;
+}
+
+.infoPanel h4 {
+    margin: 0 0 0.5rem;
+    color: #1e40af;
+    font-size: 0.95rem;
+}
+
+.infoPanel p {
+    margin: 0.25rem 0;
+    color: #374151;
+    font-size: 0.85rem;
+}
+
+/* User Activity */
+.userInfo {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.userInfo p {
+    margin: 0.5rem 0;
+}
+
+.activityContent h3 {
+    font-size: 1rem;
+    color: #374151;
+    margin-bottom: 0.75rem;
+}
+
+/* Loading / Empty / Error States */
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+.empty {
+    text-align: center;
+    color: #9ca3af;
+    padding: 2rem;
+}
+
+.error {
+    text-align: center;
+    padding: 3rem;
+    color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page {
+        padding: 1rem;
+    }
+    
+    .analyticsGrid {
+        grid-template-columns: 1fr;
+    }
+    
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+}
