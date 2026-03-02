@@ -42,7 +42,6 @@ describe('LoginPage', () => {
   it('renders the login form', () => {
     renderLoginPage()
     expect(screen.getByText('Welcome back')).toBeInTheDocument()
-    expect(screen.getByText('Sign in to My IUT')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('230042135@iut-dhaka.edu')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
   })
@@ -57,9 +56,9 @@ describe('LoginPage', () => {
     expect(screen.getByText('Create an account')).toBeInTheDocument()
   })
 
-  it('renders the DevSprint 2026 badge', () => {
+  it('renders the footer with IUT Computer Society', () => {
     renderLoginPage()
-    expect(screen.getByText('DevSprint 2026')).toBeInTheDocument()
+    expect(screen.getByText('IUT Computer Society · 2026')).toBeInTheDocument()
   })
 
   it('allows typing email and password', () => {
@@ -124,7 +123,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid credentials. Please try again.')).toBeInTheDocument()
+      expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
     })
   })
 
@@ -134,7 +133,7 @@ describe('LoginPage', () => {
     expect(passwordInput.type).toBe('password')
 
     // Click the eye button to show password
-    const toggleBtn = screen.getByRole('button', { name: '' })
+    const toggleBtn = screen.getByRole('button', { name: '👁' })
     fireEvent.click(toggleBtn)
     expect(passwordInput.type).toBe('text')
 

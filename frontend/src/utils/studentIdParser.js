@@ -27,7 +27,7 @@ export function parseStudentId(studentId) {
   }
 
   const yearDigit = parseInt(studentId.charAt(0), 10)
-  const deptCode = studentId.substring(3, 5)
+  const deptCode = studentId.substring(4, 6)
 
   const year = YEAR_NAMES[yearDigit] || null
   const department = DEPARTMENTS[deptCode] || null
