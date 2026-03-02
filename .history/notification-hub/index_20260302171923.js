@@ -1,0 +1,175 @@
+const express = require('express')
+const http    = require('http')
+const cors    = require('cors')
+const { Server } = require('socket.io')
+const { Pool } = require('pg')
+const webpush = require('web-push')
+require('dotenv').config()
+
+const app    = express()
+const server = http.createServer(app)
+
+// ─── Database connection for push subscriptions ────────────────
+const pool = new Pool({
+  host:     process.env.DB_HOST     || 'postgres',
+  port:     process.env.DB_PORT     || 5432,
+  database: process.env.DB_NAME     || 'iut_cafeteria',
+  user:     process.env.DB_USER     || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+})
+
+// ─── Web Push VAPID Configuration ──────────────────────────────
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls'
+
+webpush.setVapidDetails(
+  'mailto:admin@iut-cafeteria.app',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+)
+
+const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'],
+        methods: ['GET', 'POST'],
+        credentials: true,
+    }
+})
+
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'] }))
+app.use(express.json())
+
+const { chaosMiddleware, chaosRoute } = require('./chaos')
+app.use(chaosMiddleware)
+chaosRoute(app)
+
+// ─── Metrics ───────────────────────────────────────────────────
+const metrics = { notificationsSent: 0, activeConnections: 0, pushSent: 0 }
+
+// ─── Send Web Push Notification ────────────────────────────────
+async function sendPushNotification(studentId, title, body, data = {}) {
+  try {
+    const result = await pool.query(
+      'SELECT endpoint, p256dh, auth FROM identity.push_subscriptions WHERE student_id = $1',
+      [studentId]
+    )
+    
+    if (result.rows.length === 0) return 0
+    
+    const payload = JSON.stringify({ title, body, icon: '/iut-logo.png', data })
+    
+    let sent = 0
+    for (const sub of result.rows) {
+      try {
+        await webpush.sendNotification({
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth }
+        }, payload)
+        sent++
+        metrics.pushSent++
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await pool.query('DELETE FROM identity.push_subscriptions WHERE endpoint = $1', [sub.endpoint])
+        }
+        console.error('Push failed:', err.message)
+      }
+    }
+    return sent
+  } catch (err) {
+    console.error('Push query failed:', err.message)
+    return 0
+  }
+}
+
+// ─── Socket.IO — student connects and joins their order room ───
+io.on('connection', (socket) => {
+    metrics.activeConnections++
+    console.log(`🔌 Client connected: ${socket.id} (total: ${metrics.activeConnections})`)
+
+    // Student joins a room named by their orderId (for order tracker page)
+    socket.on('join-order', ({ orderId }) => {
+        socket.join(orderId)
+        console.log(`📦 Socket ${socket.id} joined order room: ${orderId}`)
+
+        // Immediately confirm connection
+        socket.emit('order-status', {
+            orderId,
+            status: 'PENDING',
+            message: 'Connected to live updates',
+        })
+    })
+
+    // Student joins a global room for all their orders (for toast notifications)
+    socket.on('join-student', ({ studentId }) => {
+        if (studentId) {
+            socket.join(`student-${studentId}`)
+            console.log(`👤 Socket ${socket.id} joined student room: student-${studentId}`)
+        }
+    })
+
+    socket.on('disconnect', () => {
+        metrics.activeConnections--
+        console.log(`🔌 Client disconnected: ${socket.id} (total: ${metrics.activeConnections})`)
+    })
+})
+
+// ─── POST /notify — called internally by Kitchen Queue ─────────
+// Kitchen Queue → POST /notify → Socket.IO → Student browser
+app.post('/notify', (req, res) => {
+    const { orderId, status, orderInfo = {}, studentId } = req.body
+
+    if (!orderId || !status) {
+        return res.status(400).json({ message: 'orderId and status are required.' })
+    }
+
+    const payload = {
+        orderId,
+        status,
+        orderInfo,
+        timestamp: new Date().toISOString(),
+    }
+
+    // Push to all sockets in this order's room (order tracker page)
+    io.to(orderId).emit('order-status', payload)
+
+    // Also push to the student's global room (toast notifications on any page)
+    if (studentId) {
+        io.to(`student-${studentId}`).emit('order-status', payload)
+    }
+
+    metrics.notificationsSent++
+    console.log(`📣 Notified order ${orderId}: ${status}`)
+
+    res.status(200).json({ message: 'Notification sent.', orderId, status })
+})
+
+// ─── GET /health ───────────────────────────────────────────────
+app.get('/health', (req, res) => {
+    const socketReady = io.engine && io.engine.clientsCount !== undefined
+    const healthy = socketReady
+    res.status(healthy ? 200 : 503).json({
+        status:            healthy ? 'healthy' : 'unhealthy',
+        service:           'notification-hub',
+        dependencies:      { socketio: socketReady ? 'ready' : 'not_ready' },
+        activeConnections: metrics.activeConnections,
+        timestamp:         new Date().toISOString(),
+    })
+})
+
+// ─── GET /metrics ──────────────────────────────────────────────
+app.get('/metrics', (req, res) => {
+    res.json({
+        totalOrders:       metrics.notificationsSent,
+        failureCount:      0,
+        activeConnections: metrics.activeConnections,
+        uptime:            process.uptime(),
+    })
+})
+
+// ─── Start ─────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3004
+server.listen(PORT, () => {
+    console.log(`🔔 Notification Hub running on http://localhost:${PORT}`)
+    console.log(`   POST /notify  — push status update to student`)
+    console.log(`   Socket.IO     — students connect for live updates`)
+})

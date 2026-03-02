@@ -1,0 +1,321 @@
+.page {
+    min-height: 100vh;
+    background: #f5f7fa;
+    padding-bottom: 2rem;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+    color: white;
+}
+
+.backBtn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: white;
+    flex-wrap: wrap;
+}
+
+.searchInput {
+    flex: 1;
+    min-width: 150px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.select,
+.dateInput {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+/* Orders List */
+.ordersList {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.orderCard {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.orderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.orderInfo h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    color: #1a1a2e;
+}
+
+.category {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: capitalize;
+}
+
+/* Badges */
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.badgeSuccess {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badgeDanger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badgeWarning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badgeInfo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Order Details */
+.orderDetails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.label {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
+
+.value {
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    font-weight: 500;
+}
+
+/* Order Actions */
+.orderActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+}
+
+.rating {
+    color: #f59e0b;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ratingText {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.reviewBtn,
+.qrBtn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+}
+
+.reviewBtn {
+    background: #0d9488;
+    color: white;
+}
+
+.qrBtn {
+    background: #3b82f6;
+    color: white;
+}
+
+/* Loading & Empty */
+.loading,
+.empty {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.pagination button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal */
+.modalBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+}
+
+.modal h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+}
+
+.itemName {
+    color: #6b7280;
+    margin: 0 0 1rem;
+}
+
+.ratingInput,
+.commentInput {
+    margin-bottom: 1rem;
+}
+
+.ratingInput label,
+.commentInput label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #d1d5db;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.star:hover,
+.starActive {
+    color: #f59e0b;
+}
+
+.commentInput textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.modalActions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.cancelBtn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.submitBtn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: #0d9488;
+    color: white;
+    cursor: pointer;
+}
+
+.submitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

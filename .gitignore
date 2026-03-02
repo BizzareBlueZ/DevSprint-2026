@@ -1,0 +1,62 @@
+# Environment Variables - SENSITIVE - NEVER COMMIT
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+/coverage
+
+# IDE Configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Runtime
+.cache/
+.tmp/
+temp/
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker volumes
+postgres_data/
+pgadmin_data/
+
+# Test coverage
+.nyc_output/
+coverage/
+
+# Certificates (generate with script)
+/frontend/ssl/
+*.pem
+*.crt
+*.key
+
+# Secrets and backups
+*.backup
+*.sql
+*.dump
+secrets/
+
+# Git
+.git/
+.gitattributes
+nul
+nul

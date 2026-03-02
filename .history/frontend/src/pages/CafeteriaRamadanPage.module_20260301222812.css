@@ -1,0 +1,313 @@
+/* Navy Blue Iftar Theme */
+.page {
+  background: #0d0f1a;
+  color: #e8e6f0;
+  padding: 32px;
+  min-height: calc(100vh - 60px); /* Full height minus topbar */
+  max-width: 100%;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  margin: -28px; /* Negate parent padding */
+  width: calc(100% + 56px); /* Compensate for negative margins */
+}
+
+/* Greeting */
+.greeting {
+  margin-bottom: 28px;
+}
+
+.greeting h2 {
+  font-family: 'Playfair Display', 'DM Sans', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #e8e6f0;
+  margin: 0 0 4px 0;
+}
+
+.greeting p {
+  color: #7a789a;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* Iftar Banner */
+.iftarBanner {
+  background: linear-gradient(135deg, #1f1430 0%, #1a1835 50%, #1a1220 100%);
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.iftarBanner::after {
+  content: '☪';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 4rem;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.bannerLeft {
+  z-index: 1;
+}
+
+.countdownLabel {
+  font-size: 0.8rem;
+  color: #7a789a;
+  margin-bottom: 4px;
+}
+
+.countdownTime {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #f0a500;
+  letter-spacing: 0.05em;
+  font-family: 'Courier New', monospace;
+}
+
+.pickupLabel {
+  font-size: 0.75rem;
+  color: #7a789a;
+  margin-top: 2px;
+}
+
+.bannerRight {
+  text-align: right;
+  z-index: 1;
+}
+
+.statusPill {
+  background: rgba(34, 201, 122, 0.12);
+  border: 1px solid rgba(34, 201, 122, 0.25);
+  color: #22c97a;
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.statusDetails {
+  font-size: 0.72rem;
+  color: #7a789a;
+  margin-top: 8px;
+}
+
+/* Alert Banner */
+.alertBanner {
+  background: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.alertIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alertBanner strong {
+  color: #ff4d6d;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.alertBanner p {
+  color: #e8e6f0;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* Menu Title */
+.menuTitle {
+  font-size: 0.78rem;
+  color: #7a789a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+/* Menu Grid */
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.menuCard {
+  background: #13162a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.menuCard:hover {
+  border-color: rgba(240, 165, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.menuCardSelected {
+  border-color: #f0a500 !important;
+  background: rgba(240, 165, 0, 0.06) !important;
+}
+
+.menuCardOutOfStock {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.selectedCheck {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  background: #f0a500;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #000;
+  font-weight: bold;
+}
+
+.foodEmoji {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+
+.foodName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #e8e6f0;
+  margin-bottom: 3px;
+}
+
+.foodDesc {
+  color: #7a789a;
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+}
+
+.foodPrice {
+  color: #f0a500;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.foodStock {
+  font-size: 0.72rem;
+}
+
+.stockOk {
+  color: #22c97a;
+}
+
+.stockLow {
+  color: #ff7b3a;
+}
+
+.stockZero {
+  color: #ff4d6d;
+}
+
+/* Order Bar */
+.orderBar {
+  background: #13162a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.orderInfo {
+  font-size: 0.88rem;
+  color: #7a789a;
+}
+
+.orderInfo span {
+  color: #e8e6f0;
+  font-weight: 600;
+}
+
+.orderBtn {
+  padding: 11px 28px;
+  background: linear-gradient(135deg, #f0a500, #ff7b3a);
+  border: none;
+  border-radius: 9px;
+  color: #000;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+
+.orderBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.orderBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page {
+    padding: 18px;
+    margin: -20px -16px; /* Negate mobile padding */
+    width: calc(100% + 32px);
+  }
+
+  .iftarBanner {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .bannerRight {
+    text-align: center;
+  }
+
+  .menuGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .orderBar {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .orderBtn {
+    width: 100%;
+  }
+}

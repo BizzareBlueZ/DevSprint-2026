@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Galaxy Blue Theme */
+  --gold:        #f0a500;
+  --gold-dark:   #d48600;
+  --gold-light:  #ffc844;
+  
+  /* Navy Blues */
+  --bg:          #0d0f1a;
+  --bg-alt:      #1a1e35;
+  --surface:     #13162a;
+  --surface2:    #1a1e35;
+  --border:      rgba(255, 255, 255, 0.07);
+  --border-soft: rgba(255, 255, 255, 0.04);
+
+  /* Text */
+  --text-1:      #e8e6f0;
+  --text-2:      #b0adc8;
+  --text-3:      #7a789a;
+  --text-4:      #5a596f;
+
+  /* Status */
+  --green:       #22c97a;
+  --green-bg:    rgba(34, 201, 122, 0.12);
+  --amber:       #ff7b3a;
+  --amber-bg:    rgba(255, 123, 58, 0.12);
+  --red:         #ff4d6d;
+  --red-bg:      rgba(255, 77, 109, 0.12);
+  --blue:        #4ea8de;
+  --blue-bg:     rgba(78, 168, 222, 0.12);
+
+  /* Shadows */
+  --shadow-xs:   0 1px 2px rgba(0,0,0,0.2);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.1);
+  --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -1px rgba(0,0,0,0.1);
+  --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -2px rgba(0,0,0,0.1);
+  --shadow-xl:   0 20px 25px -5px rgba(0,0,0,0.4), 0 10px 10px -5px rgba(0,0,0,0.1);
+  --shadow-gold: 0 8px 24px rgba(240, 165, 0, 0.2);
+
+  /* Layout */
+  --sidebar-w:   240px;
+  --header-h:    60px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+
+  /* Fonts */
+  --font:        'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif:  'Fraunces', Georgia, serif;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root { height: 100%; }
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: var(--font); border: none; outline: none; }
+input, textarea, select { font-family: var(--font); outline: none; }
+img { display: block; }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+.fade-up   { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-in   { animation: fadeIn 0.3s ease both; }
+
+/* ── Spinner ─────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+.spinner-teal {
+  border-color: var(--teal-light);
+  border-top-color: var(--teal);
+}
+
+/* ── Shared card ─────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}

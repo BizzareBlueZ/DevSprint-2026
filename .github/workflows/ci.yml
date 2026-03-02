@@ -7,8 +7,38 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Unit Tests
+  test-backend:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - stock-service
+          - order-gateway
+          - identity-provider
+          - kitchen-queue
+          - notification-hub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.service }}
+        run: npm install
+
+      - name: Run tests
+        working-directory: ${{ matrix.service }}
+        run: npm test
+
+  test-frontend:
+    name: Frontend Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -20,18 +50,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install stock-service dependencies
-        working-directory: stock-service
+      - name: Install dependencies
+        working-directory: frontend
         run: npm install
 
-      - name: Run stock-service tests
-        working-directory: stock-service
+      - name: Run tests
+        working-directory: frontend
         run: npm test
 
-      - name: Install order-gateway dependencies
-        working-directory: order-gateway
-        run: npm install
-
-      - name: Run order-gateway tests
-        working-directory: order-gateway
-        run: npm test
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

@@ -1,0 +1,110 @@
+.page {
+    min-height: 100vh;
+    background: #0a0e1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+}
+
+.card {
+    background: #0d1220;
+    border: 1px solid rgba(62,169,159,0.25);
+    border-top: 3px solid #3ea99f;
+    border-radius: 12px;
+    padding: 48px 40px;
+    width: 360px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(62,169,159,0.08);
+}
+
+.icon {
+    font-size: 40px;
+    color: #3ea99f;
+    margin-bottom: 16px;
+}
+
+.title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-size: 11px;
+    color: #475569;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+    letter-spacing: 3px;
+}
+
+.input:focus {
+    border-color: #3ea99f;
+    box-shadow: 0 0 0 3px rgba(62,169,159,0.1);
+}
+
+.input::placeholder {
+    color: #475569;
+    letter-spacing: 0;
+}
+
+.error {
+    font-size: 12px;
+    color: #fca5a5;
+    margin: 0;
+}
+
+.btn {
+    padding: 12px;
+    background: #3ea99f;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+    margin-top: 4px;
+}
+
+.btn:hover {
+    background: #2d8a81;
+}
+
+.hint {
+    margin-top: 24px;
+    font-size: 11px;
+    color: #334155;
+}
+
+.hint code {
+    color: #475569;
+    background: rgba(255,255,255,0.04);
+    padding: 2px 6px;
+    border-radius: 4px;
+}

@@ -1,0 +1,432 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+  padding: 0;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+@media (min-width: 600px) {
+  .overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.modal {
+  background: white;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+}
+
+@media (min-width: 600px) {
+  .modal {
+    border-radius: 20px;
+    animation: scaleIn 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* Header */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  padding: 20px 20px 0;
+  gap: 10px;
+  position: relative;
+}
+
+.backBtn, .closeBtn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #64748b;
+  font-size: 13px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.backBtn:hover, .closeBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalTitle {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+}
+
+/* Body */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Amount input */
+.amountWrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 4px 16px;
+  transition: border-color 0.2s;
+}
+
+.amountWrap:focus-within {
+  border-color: #2a9d8f;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(42,157,143,0.1);
+}
+
+.currencySymbol {
+  font-size: 24px;
+  font-weight: 300;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.amountInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 10px 0;
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.amountInput:focus { outline: none; }
+.amountInput::placeholder { color: #e2e8f0; }
+
+/* Remove number input arrows */
+.amountInput::-webkit-outer-spin-button,
+.amountInput::-webkit-inner-spin-button { -webkit-appearance: none; }
+.amountInput[type=number] { -moz-appearance: textfield; }
+
+/* Quick amounts */
+.quickAmounts {
+  display: flex;
+  gap: 8px;
+}
+
+.quickBtn {
+  flex: 1;
+  padding: 8px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.15s;
+}
+
+.quickBtn:hover {
+  border-color: #2a9d8f;
+  color: #2a9d8f;
+  background: #f0fdf9;
+}
+
+.quickBtnActive {
+  border-color: #2a9d8f !important;
+  color: #2a9d8f !important;
+  background: #e8f5f3 !important;
+}
+
+/* Payment method grid */
+.methodGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.methodCard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.methodCard:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.methodCardActive {
+  border-width: 2px;
+}
+
+.methodIcon { font-size: 20px; line-height: 1; }
+
+.methodLabel {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.methodCheck {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Phone input */
+.phoneWrap {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.phoneWrap:focus-within {
+  border-color: #2a9d8f;
+  background: white;
+}
+
+.phoneFlag {
+  padding: 12px 12px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+  background: #f1f5f9;
+  border-right: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.phoneInput {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: #0f172a;
+  font-family: var(--font);
+  letter-spacing: 1px;
+}
+.phoneInput:focus { outline: none; }
+
+/* Bank note */
+.bankNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #1d4ed8;
+}
+
+/* OTP */
+.otpInfo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e8eaed;
+}
+
+.otpIcon { font-size: 28px; line-height: 1; }
+
+.otpTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.otpSub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+.otpInput {
+  text-align: center !important;
+  font-size: 28px !important;
+  letter-spacing: 8px !important;
+}
+
+.otpHint {
+  font-size: 11.5px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Summary */
+.summaryBox {
+  background: #f8fafc;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.summaryRow:last-child { border-bottom: none; }
+
+.summaryVal { font-weight: 600; color: #0f172a; }
+
+.summaryTotal {
+  color: #0f172a;
+  font-weight: 700;
+  background: #f1f5f9;
+}
+
+/* Error */
+.error {
+  font-size: 13px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* Proceed button */
+.proceedBtn {
+  width: 100%;
+  padding: 14px;
+  background: #2a9d8f;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 50px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+.proceedBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.proceedBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Success */
+.successBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 24px 40px;
+  text-align: center;
+}
+
+.successRing {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: #dcfce7;
+  display: flex; align-items: center; justify-content: center;
+  animation: successPop 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes successPop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.successCheck {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.successAmount {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 40px;
+  font-weight: 400;
+  color: #0f172a;
+  letter-spacing: -1.5px;
+  margin-top: 4px;
+}
+
+.successTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.successSub {
+  font-size: 13px;
+  color: #94a3b8;
+}

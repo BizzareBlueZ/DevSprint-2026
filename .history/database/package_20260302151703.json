@@ -1,0 +1,14 @@
+{
+  "name": "cafeteria-db-migrations",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Database migration runner for IUT Cafeteria microservices",
+  "scripts": {
+    "status": "node migrate.js status",
+    "up": "node migrate.js up",
+    "redo": "node migrate.js redo"
+  },
+  "dependencies": {
+    "pg": "^8.12.0"
+  }
+}

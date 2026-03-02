@@ -1,0 +1,668 @@
+/* Navy Blue Iftar Theme */
+.page {
+  background: #0d0f1a;
+  color: #e8e6f0;
+  padding: 32px;
+  min-height: calc(100vh - 60px); /* Full height minus topbar */
+  max-width: 100%;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  margin: -28px; /* Negate parent padding */
+  width: calc(100% + 56px); /* Compensate for negative margins */
+}
+
+/* Greeting */
+.greeting {
+  margin-bottom: 28px;
+}
+
+.greeting h2 {
+  font-family: 'Playfair Display', 'DM Sans', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #e8e6f0;
+  margin: 0 0 4px 0;
+}
+
+.greeting p {
+  color: #7a789a;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* Iftar Banner */
+.iftarBanner {
+  background: linear-gradient(135deg, #1f1430 0%, #1a1835 50%, #1a1220 100%);
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.iftarBanner::after {
+  content: '☪';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 4rem;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.bannerLeft {
+  z-index: 1;
+}
+
+.countdownLabel {
+  font-size: 0.8rem;
+  color: #7a789a;
+  margin-bottom: 4px;
+}
+
+.countdownTime {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #f0a500;
+  letter-spacing: 0.05em;
+  font-family: 'Courier New', monospace;
+}
+
+.pickupLabel {
+  font-size: 0.75rem;
+  color: #7a789a;
+  margin-top: 2px;
+}
+
+.bannerRight {
+  text-align: right;
+  z-index: 1;
+}
+
+.statusPill {
+  background: rgba(34, 201, 122, 0.12);
+  border: 1px solid rgba(34, 201, 122, 0.25);
+  color: #22c97a;
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.statusDetails {
+  font-size: 0.72rem;
+  color: #7a789a;
+  margin-top: 8px;
+}
+
+/* Alert Banner */
+.alertBanner {
+  background: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.alertIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alertBanner strong {
+  color: #ff4d6d;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.alertBanner p {
+  color: #e8e6f0;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* Menu Title */
+.menuTitle {
+  font-size: 0.78rem;
+  color: #7a789a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+/* Menu Grid */
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.menuCard {
+  background: #13162a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.menuCard:hover {
+  border-color: rgba(240, 165, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.menuCardSelected {
+  border-color: #f0a500 !important;
+  background: rgba(240, 165, 0, 0.06) !important;
+}
+
+.menuCardOutOfStock {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.selectedCheck {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  background: #f0a500;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #000;
+  font-weight: bold;
+}
+
+.foodEmoji {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+
+.foodName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #e8e6f0;
+  margin-bottom: 3px;
+}
+
+.foodDesc {
+  color: #7a789a;
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+}
+
+.foodPrice {
+  color: #f0a500;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.foodStock {
+  font-size: 0.72rem;
+}
+
+.stockOk {
+  color: #22c97a;
+}
+
+.stockLow {
+  color: #ff7b3a;
+}
+
+.stockZero {
+  color: #ff4d6d;
+}
+
+/* Order Bar */
+.orderBar {
+  background: #13162a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.orderInfo {
+  font-size: 0.88rem;
+  color: #7a789a;
+}
+
+.orderInfo span {
+  color: #e8e6f0;
+  font-weight: 600;
+}
+
+.orderBtn {
+  padding: 11px 28px;
+  background: linear-gradient(135deg, #f0a500, #ff7b3a);
+  border: none;
+  border-radius: 9px;
+  color: #000;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+
+.orderBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.orderBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================ */
+/* Advance Booking Section                      */
+/* ============================================ */
+
+.advanceSection {
+  margin-top: 40px;
+  background: linear-gradient(135deg, #1a1230 0%, #151528 50%, #12162a 100%);
+  border: 1px solid rgba(240, 165, 0, 0.15);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.advanceTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.advanceTitle {
+  font-family: 'Playfair Display', 'DM Sans', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e8e6f0;
+  margin-bottom: 4px;
+}
+
+.advanceSubtitle {
+  font-size: 0.82rem;
+  color: #7a789a;
+}
+
+.walletBadge {
+  background: rgba(240, 165, 0, 0.12);
+  border: 1px solid rgba(240, 165, 0, 0.25);
+  color: #f0a500;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Meal Type Tabs */
+.mealTypeTabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.mealTab {
+  background: transparent;
+  border: none;
+  color: #7a789a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 0;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+}
+
+.mealTab:hover {
+  color: #e8e6f0;
+}
+
+.mealTabActive {
+  color: #e8e6f0;
+  border-bottom-color: currentColor;
+}
+
+/* Booked tokens */
+.bookedTokensContainer {
+  margin-bottom: 16px;
+}
+
+.bookedTokensRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.bookedLabel {
+  font-size: 0.78rem;
+  color: #7a789a;
+}
+
+.bookedChip {
+  background: rgba(34, 201, 122, 0.12);
+  border: 1px solid rgba(34, 201, 122, 0.25);
+  color: #22c97a;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Calendar Grid */
+.calendarGrid {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.calendarHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.calDayLabel {
+  text-align: center;
+  padding: 10px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7a789a;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.calendarRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.calendarRow:last-child {
+  border-bottom: none;
+}
+
+.calDay {
+  min-height: 70px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+
+.calDay:last-child {
+  border-right: none;
+}
+
+.calDayNum {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e8e6f0;
+  line-height: 1;
+}
+
+.calDayMonth {
+  font-size: 0.6rem;
+  color: #7a789a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calDayDisabled {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.calDayToday {
+  background: rgba(42, 157, 143, 0.1);
+}
+
+.calDayToday .calDayNum {
+  color: #2a9d8f;
+}
+
+.calDaySelectable {
+  cursor: pointer;
+}
+
+.calDaySelectable:hover {
+  background: rgba(240, 165, 0, 0.08);
+}
+
+.calDayBooked {
+  background: rgba(34, 201, 122, 0.08);
+  pointer-events: none;
+}
+
+.calDayBooked .calDayNum {
+  color: #22c97a;
+}
+
+.calDayHasBooking {
+  background: rgba(100, 150, 200, 0.05);
+  pointer-events: auto;
+}
+
+.calDayBookingBadge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #f0a500;
+  background: rgba(240, 165, 0, 0.2);
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-top: 1px;
+  letter-spacing: 0.03em;
+}
+
+.calDayBadge {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #22c97a;
+  background: rgba(34, 201, 122, 0.15);
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-top: 2px;
+}
+
+.calDaySelected {
+  background: rgba(240, 165, 0, 0.12) !important;
+  border-color: rgba(240, 165, 0, 0.3);
+}
+
+.calDaySelected .calDayNum {
+  color: #f0a500;
+}
+
+.calDayCheck {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: #f0a500;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Booking Summary */
+.bookingSummary {
+  background: #13162a;
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.bookingDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  color: #e8e6f0;
+}
+
+.bookingCost {
+  color: #f0a500;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.bookBtn {
+  padding: 11px 24px;
+  background: linear-gradient(135deg, #2a9d8f, #22c97a);
+  border: none;
+  border-radius: 9px;
+  color: #000;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.bookBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.bookBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Booking Messages */
+.bookingSuccess {
+  background: rgba(34, 201, 122, 0.12);
+  border: 1px solid rgba(34, 201, 122, 0.3);
+  color: #22c97a;
+  font-size: 0.85rem;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.bookingError {
+  background: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  color: #ff4d6d;
+  font-size: 0.85rem;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page {
+    padding: 18px;
+    margin: -20px -16px; /* Negate mobile padding */
+    width: calc(100% + 32px);
+  }
+
+  .iftarBanner {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .bannerRight {
+    text-align: center;
+  }
+
+  .menuGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .orderBar {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .orderBtn {
+    width: 100%;
+  }
+
+  .advanceTitleRow {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bookingSummary {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .bookBtn {
+    width: 100%;
+  }
+
+  .calDay {
+    min-height: 56px;
+    padding: 6px 2px;
+  }
+
+  .calDayNum {
+    font-size: 0.78rem;
+  }
+
+  .calDayBadge {
+    font-size: 0.5rem;
+    padding: 1px 4px;
+  }
+
+  .calDayCheck {
+    width: 14px;
+    height: 14px;
+    font-size: 0.5rem;
+  }
+}

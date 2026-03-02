@@ -1,0 +1,243 @@
+.page {
+  min-height: 100vh;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 900px;
+  width: 100%;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  overflow: hidden;
+  position: relative;
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Left panel - decorative image */
+.left {
+  background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.leftImage {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Right panel */
+.right {
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* Toggle buttons */
+.toggleWrap {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 50px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.toggleBtn {
+  padding: 10px 28px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.toggleBtn:hover {
+  color: #334155;
+}
+
+.toggleActive {
+  background: #6366f1;
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.toggleActive:hover {
+  color: white;
+}
+
+.card {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cardHeader {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #0f172a;
+  transition: all 0.2s;
+}
+
+.input::placeholder { color: #94a3b8; }
+
+.input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.showPass {
+  position: absolute; 
+  right: 12px;
+  background: none; 
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.showPass:hover {
+  color: #64748b;
+}
+
+.forgotLink {
+  font-size: 13px;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
+.errorBox {
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px; 
+  color: #dc2626;
+  animation: fadeUp 0.25s ease;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.registerLink {
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.registerLink a {
+  color: #6366f1;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.registerLink a:hover { text-decoration: underline; }
+
+@media (max-width: 720px) {
+  .wrapper { grid-template-columns: 1fr; }
+  .left { display: none; }
+  .right { padding: 40px 32px; }
+}

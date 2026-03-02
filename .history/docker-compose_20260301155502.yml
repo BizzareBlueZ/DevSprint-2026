@@ -1,0 +1,179 @@
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: cafeteria
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cafeteria-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d cafeteria"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - cafeteria-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "15672:15672"   # Web UI: http://localhost:15672 (guest/guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - cafeteria-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── pgAdmin — Web-based Database Viewer ─────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@iut-dhaka.edu
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./database/pgadmin-servers.json:/pgadmin4/servers.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cafeteria-net
+
+  # ── Application Services ────────────────────────────────────────
+
+  identity-provider:
+    build: ./identity-provider
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      JWT_SECRET: iut-cafeteria-super-secret-2026
+      JWT_EXPIRES_IN: 24h
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cafeteria
+      DB_USER: admin
+      DB_PASSWORD: secret123
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cafeteria-net
+
+  order-gateway:
+    build: ./order-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      JWT_SECRET: iut-cafeteria-super-secret-2026
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cafeteria
+      DB_USER: admin
+      DB_PASSWORD: secret123
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      STOCK_SERVICE_URL: http://stock-service:3002
+      NOTIFICATION_HUB_URL: http://notification-hub:3004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cafeteria-net
+
+  stock-service:
+    build: ./stock-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cafeteria
+      DB_USER: admin
+      DB_PASSWORD: secret123
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cafeteria-net
+
+  kitchen-queue:
+    build: ./kitchen-queue
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cafeteria
+      DB_USER: admin
+      DB_PASSWORD: secret123
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      NOTIFICATION_HUB_URL: http://notification-hub:3004
+      KITCHEN_MIN_MS: 3000
+      KITCHEN_MAX_MS: 7000
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cafeteria-net
+
+  notification-hub:
+    build: ./notification-hub
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+    networks:
+      - cafeteria-net
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - order-gateway
+      - notification-hub
+    networks:
+      - cafeteria-net
+
+networks:
+  cafeteria-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:

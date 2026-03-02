@@ -1,0 +1,106 @@
+.layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #0f1923;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.sidebar {
+    width: 210px;
+    flex-shrink: 0;
+    background: #1a2332;
+    border-right: 1px solid #243044;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 18px;
+    border-bottom: 1px solid #243044;
+}
+
+.brandIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3ea99f, #2d5a7a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.brandName {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e0e8f0;
+    line-height: 1.2;
+}
+
+.brandSub {
+    font-size: 11px;
+    color: #4a5a6a;
+}
+
+.nav {
+    flex: 1;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: #6b7a8d;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.navItem:hover {
+    background: #243044;
+    color: #c0d0e0;
+}
+
+.navActive {
+    background: rgba(62,169,159,0.12);
+    color: #3ea99f !important;
+}
+
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    margin: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #4a5a6a;
+    background: none;
+    border: 1px solid #243044;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+}
+
+.logoutBtn:hover {
+    background: rgba(239,68,68,0.08);
+    border-color: rgba(239,68,68,0.3);
+    color: #f87171;
+}
+
+.main {
+    flex: 1;
+    overflow-y: auto;
+    background: #0f1923;
+}

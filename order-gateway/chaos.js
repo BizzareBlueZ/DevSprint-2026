@@ -23,7 +23,12 @@ function chaosMiddleware(req, res, next) {
  */
 function verifyAdmin(req) {
     const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
+    let token = authHeader && authHeader.split(' ')[1]
+    // Fallback: read token from httpOnly cookie
+    if (!token && req.headers.cookie) {
+        const match = req.headers.cookie.split(';').find(c => c.trim().startsWith('token='))
+        if (match) token = match.split('=')[1].trim()
+    }
     if (!token) return null
     try {
         const decoded = jwt.verify(token, JWT_SECRET)
