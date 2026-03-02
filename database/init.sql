@@ -66,6 +66,19 @@ CREATE TABLE identity.students (
 CREATE INDEX idx_students_email      ON identity.students(email);
 CREATE INDEX idx_students_student_id ON identity.students(student_id);
 
+-- PUSH SUBSCRIPTIONS (Web Push notifications)
+-- ============================================================
+CREATE TABLE identity.push_subscriptions (
+    student_id VARCHAR(20) NOT NULL REFERENCES identity.students(student_id) ON DELETE CASCADE,
+    endpoint   TEXT        NOT NULL,
+    p256dh     TEXT        NOT NULL,
+    auth       TEXT        NOT NULL,
+    created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (student_id, endpoint)
+);
+
+CREATE UNIQUE INDEX idx_push_subscriptions_endpoint ON identity.push_subscriptions(endpoint);
+
 -- ============================================================
 -- PUBLIC SCHEMA - Shared Core Data
 -- ============================================================
@@ -99,6 +112,19 @@ CREATE TABLE public.transactions (
 CREATE INDEX idx_transactions_student_id ON public.transactions(student_id);
 CREATE INDEX idx_transactions_created_at ON public.transactions(created_at);
 
+-- EMERGENCY LOANS (advance from monthly allowance)
+-- ============================================================
+CREATE TABLE public.emergency_loans (
+    id         SERIAL PRIMARY KEY,
+    student_id VARCHAR(20)   NOT NULL,
+    amount     DECIMAL(10,2) NOT NULL CHECK (amount > 0),
+    reason     VARCHAR(255),
+    status     VARCHAR(20)   NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_emergency_loans_student_status ON public.emergency_loans(student_id, status);
+
 -- ============================================================
 -- INVENTORY SCHEMA - Stock Service
 -- ============================================================
@@ -107,7 +133,7 @@ CREATE INDEX idx_transactions_created_at ON public.transactions(created_at);
 -- ============================================================
 CREATE TABLE inventory.stock (
     id         SERIAL PRIMARY KEY,
-    item_id    INTEGER NOT NULL REFERENCES public.menu_items(id),
+    item_id    INTEGER NOT NULL UNIQUE REFERENCES public.menu_items(id),
     quantity   INTEGER NOT NULL DEFAULT 0,
     version    INTEGER NOT NULL DEFAULT 0,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -130,7 +156,11 @@ CREATE TABLE orders.orders (
     status          VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     amount          DECIMAL(10,2) NOT NULL,
     meal_date       DATE DEFAULT CURRENT_DATE,
-    idempotency_key VARCHAR(100),
+    scheduled_pickup_time TIMESTAMP,
+    qr_code         VARCHAR(64) UNIQUE DEFAULT encode(gen_random_bytes(8), 'hex'),
+    pickup_verified BOOLEAN NOT NULL DEFAULT false,
+    completed_at    TIMESTAMP,
+    idempotency_key VARCHAR(100) UNIQUE,
     acknowledged_at TIMESTAMP,
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -139,6 +169,21 @@ CREATE TABLE orders.orders (
 CREATE INDEX idx_orders_student_id ON orders.orders(student_id);
 CREATE INDEX idx_orders_status ON orders.orders(status);
 CREATE INDEX idx_orders_idempotency ON orders.orders(idempotency_key);
+CREATE INDEX idx_orders_qr_code ON orders.orders(qr_code);
+
+-- REVIEWS
+-- ============================================================
+CREATE TABLE public.reviews (
+    id         SERIAL PRIMARY KEY,
+    order_id   VARCHAR(50) UNIQUE NOT NULL REFERENCES orders.orders(order_id) ON DELETE CASCADE,
+    student_id VARCHAR(20) NOT NULL,
+    item_id    INTEGER     NOT NULL REFERENCES public.menu_items(id) ON DELETE CASCADE,
+    rating     SMALLINT    NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment    TEXT,
+    created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_reviews_item_created ON public.reviews(item_id, created_at DESC);
 
 -- TOKENS TABLE (Ramadan meal tokens)
 -- ============================================================

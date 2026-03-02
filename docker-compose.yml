@@ -36,6 +36,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - cafeteria-net
     healthcheck:
@@ -157,6 +160,11 @@ services:
       - "${NOTIFICATION_HUB_PORT}:3004"
     environment:
       PORT: 3004
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - cafeteria-net
 
@@ -178,3 +186,4 @@ networks:
 volumes:
   postgres_data:
   pgadmin_data:
+  rabbitmq_data:
