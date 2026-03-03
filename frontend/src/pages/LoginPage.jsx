@@ -3,7 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
+import { sanitizeText } from '../utils/sanitization'
+import { storeUserData, enableHttpOnlyCookies } from '../utils/tokenManager'
 import styles from './LoginPage.module.css'
+
+// Enable httpOnly cookie support
+enableHttpOnlyCookies(axios)
 
 export default function LoginPage() {
   const [userType, setUserType] = useState('student') // 'student' or 'admin'
@@ -22,15 +27,17 @@ export default function LoginPage() {
     setLoading(true)
     try {
       if (userType === 'student') {
-        await login(email, password)
+        await login(sanitizeText(email, 254), password)
         navigate('/apps')
       } else {
         // Admin login
         const res = await axios.post('/api/auth/admin/login', 
-          { username: email, password },
+          { username: sanitizeText(email, 100), password },
           { withCredentials: true }
         )
         const { admin } = res.data
+        // Token is in httpOnly cookie; only store non-sensitive profile data
+        storeUserData(admin, null)
         sessionStorage.setItem('admin_user', JSON.stringify(admin))
         navigate('/admin/dashboard')
       }
@@ -163,7 +170,7 @@ export default function LoginPage() {
             )}
             {userType === 'admin' && (
               <p className={styles.registerLink}>
-                <small>Default: <code>iutcs</code> / <code>devsprint2026</code></small>
+                <small>Contact your system administrator for access credentials.</small>
               </p>
             )}
           </div>

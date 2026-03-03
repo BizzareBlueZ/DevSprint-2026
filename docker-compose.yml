@@ -74,8 +74,12 @@ services:
       - "${IDENTITY_PROVIDER_PORT}:3001"
     environment:
       PORT: 3001
+      NODE_ENV: ${NODE_ENV:-production}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      ENABLE_HTTPS: ${ENABLE_HTTPS:-false}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${POSTGRES_DB}
@@ -119,6 +123,7 @@ services:
       - "${STOCK_SERVICE_PORT}:3002"
     environment:
       PORT: 3002
+      JWT_SECRET: ${JWT_SECRET}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${POSTGRES_DB}
@@ -139,6 +144,7 @@ services:
       - "${KITCHEN_QUEUE_PORT}:3003"
     environment:
       PORT: 3003
+      JWT_SECRET: ${JWT_SECRET}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${POSTGRES_DB}
@@ -160,6 +166,9 @@ services:
       - "${NOTIFICATION_HUB_PORT}:3004"
     environment:
       PORT: 3004
+      JWT_SECRET: ${JWT_SECRET}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${POSTGRES_DB}
@@ -173,6 +182,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      ENABLE_HTTPS: ${ENABLE_HTTPS:-false}
+      SSL_CERT_PATH: ${SSL_CERT_PATH:-/etc/nginx/ssl/cert.pem}
+      SSL_KEY_PATH: ${SSL_KEY_PATH:-/etc/nginx/ssl/key.pem}
     depends_on:
       - order-gateway
       - notification-hub

@@ -1,19 +1,49 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# HTTP-only config — used for local development.
-# In production (ENABLE_HTTPS=true), docker-entrypoint.sh renders
-# nginx-ssl.conf.template instead, which enforces HTTPS + HSTS.
-# ─────────────────────────────────────────────────────────────────────────────
+# ── Production HTTPS configuration ──────────────────────────────────────────
+# Used when ENABLE_HTTPS=true and SSL certificates are available.
+# docker-entrypoint.sh selects this template automatically.
+
+# ── HTTP → HTTPS redirect ────────────────────────────────────────────────────
 server {
     listen 80;
     server_name _;
     server_tokens off;
+
+    # Let's Encrypt ACME challenge (certbot renewal)
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Redirect all other HTTP traffic to HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ── HTTPS server ─────────────────────────────────────────────────────────────
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name _;
     root /usr/share/nginx/html;
     index index.html;
+    server_tokens off;
 
-    # Use Docker DNS resolver for runtime upstream resolution
-    resolver 127.0.0.11 valid=10s;
+    client_max_body_size 10m;
 
-    # ── Security Headers ──────────────────────────────────────
+    # ── SSL Certificate ──────────────────────────────────────────────────────
+    ssl_certificate     ${SSL_CERT_PATH};
+    ssl_certificate_key ${SSL_KEY_PATH};
+
+    # ── Modern TLS settings ──────────────────────────────────────────────────
+    ssl_protocols             TLSv1.2 TLSv1.3;
+    ssl_ciphers               ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256;
+    ssl_prefer_server_ciphers off;
+    ssl_session_timeout       1d;
+    ssl_session_cache         shared:SSL:10m;
+    ssl_session_tickets       off;
+
+    # ── Security Headers ─────────────────────────────────────────────────────
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
@@ -21,31 +51,34 @@ server {
     add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
     add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' wss: ws:; font-src 'self'; frame-ancestors 'self';" always;
 
+    # Use Docker DNS resolver for runtime upstream resolution
+    resolver 127.0.0.11 valid=10s;
+
     # Proxy auth API to identity-provider
     location /api/auth/ {
-        set $upstream_auth http://identity-provider:3001;
+        set $upstream_auth ${IDENTITY_PROVIDER_UPSTREAM};
         rewrite ^/api/auth/(.*) /$1 break;
         proxy_pass $upstream_auth;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     # Proxy all other API calls to order-gateway
     location /api/ {
-        set $upstream_api http://order-gateway:3000;
+        set $upstream_api ${ORDER_GATEWAY_UPSTREAM};
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $upstream_api;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     # Socket.IO — proxy to notification-hub with WebSocket support
     location /socket.io/ {
-        set $upstream_ws http://notification-hub:3004;
+        set $upstream_ws ${NOTIFICATION_HUB_UPSTREAM};
         proxy_pass $upstream_ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -58,53 +91,53 @@ server {
 
     # Admin proxy routes for dashboard
     location /admin/identity/ {
-        set $upstream_identity http://identity-provider:3001;
+        set $upstream_identity ${IDENTITY_PROVIDER_UPSTREAM};
         rewrite ^/admin/identity/(.*) /$1 break;
         proxy_pass $upstream_identity;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     location /admin/gateway/ {
-        set $upstream_gateway http://order-gateway:3000;
+        set $upstream_gateway ${ORDER_GATEWAY_UPSTREAM};
         rewrite ^/admin/gateway/(.*) /$1 break;
         proxy_pass $upstream_gateway;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     location /admin/stock/ {
-        set $upstream_stock http://stock-service:3002;
+        set $upstream_stock ${STOCK_SERVICE_UPSTREAM};
         rewrite ^/admin/stock/(.*) /$1 break;
         proxy_pass $upstream_stock;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     location /admin/kitchen/ {
-        set $upstream_kitchen http://kitchen-queue:3003;
+        set $upstream_kitchen ${KITCHEN_QUEUE_UPSTREAM};
         rewrite ^/admin/kitchen/(.*) /$1 break;
         proxy_pass $upstream_kitchen;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     location /admin/notifications/ {
-        set $upstream_notif http://notification-hub:3004;
+        set $upstream_notif ${NOTIFICATION_HUB_UPSTREAM};
         rewrite ^/admin/notifications/(.*) /$1 break;
         proxy_pass $upstream_notif;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     # React SPA - all routes serve index.html

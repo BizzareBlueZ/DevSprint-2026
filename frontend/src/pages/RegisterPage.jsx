@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { useLanguage } from '../context/LanguageContext'
+import { sanitizeStudentId, sanitizeName, sanitizeText } from '../utils/sanitization'
 import styles from './RegisterPage.module.css'
 
 export default function RegisterPage() {
@@ -31,8 +32,20 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      const email = `${form.studentId}@iut-dhaka.edu`
-      await axios.post('/api/auth/register', { ...form, email, year: parseInt(form.year) })
+      const cleanStudentId = sanitizeStudentId(form.studentId)
+      const cleanName      = sanitizeName(form.name)
+      const cleanDept      = sanitizeText(form.department, 10)
+      if (!cleanStudentId) { setError('Invalid student ID format.'); setLoading(false); return }
+      if (!cleanName)      { setError('Invalid name format.'); setLoading(false); return }
+      const email = `${cleanStudentId}@iut-dhaka.edu`
+      await axios.post('/api/auth/register', {
+        studentId:  cleanStudentId,
+        name:       cleanName,
+        department: cleanDept,
+        year:       parseInt(form.year),
+        password:   form.password,
+        email,
+      })
       navigate('/login')
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.')

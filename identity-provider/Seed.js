@@ -1,5 +1,9 @@
 // seed.js — run this once after `init.sql` to populate students and admins
 // Usage: node seed.js
+// Passwords are controlled by env vars:
+//   SEED_ADMIN_PASSWORD      (default admin account)
+//   SEED_IUTCS_ADMIN_PASSWORD (iutcs admin account)
+//   SEED_STUDENT_PASSWORD    (all demo student accounts)
 const bcrypt = require('bcryptjs')
 const { Pool } = require('pg')
 require('dotenv').config()
@@ -12,17 +16,27 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD || 'secret123',
 })
 
+// Load seed passwords from env — never use these defaults in production!
+const SEED_STUDENT_PASSWORD      = process.env.SEED_STUDENT_PASSWORD      || 'changeme-student'
+const SEED_ADMIN_PASSWORD        = process.env.SEED_ADMIN_PASSWORD        || 'changeme-admin'
+const SEED_IUTCS_ADMIN_PASSWORD  = process.env.SEED_IUTCS_ADMIN_PASSWORD  || 'changeme-iutcs'
+
+if (!process.env.SEED_ADMIN_PASSWORD || !process.env.SEED_IUTCS_ADMIN_PASSWORD) {
+    console.warn('⚠️  WARNING: SEED_ADMIN_PASSWORD / SEED_IUTCS_ADMIN_PASSWORD env vars not set.')
+    console.warn('   Using insecure placeholder passwords. Set these before running in any shared environment!')
+}
+
 const STUDENTS = [
-    { studentId: '230042135', name: 'Khadiza Sultana', department: 'CSE', year: 3, password: 'password123', balance: 500 },
-    { studentId: '220041001', name: 'Ahmed Hassan',    department: 'CSE', year: 4, password: 'password123', balance: 300 },
-    { studentId: '230041002', name: 'Fatima Rahman',   department: 'EEE', year: 3, password: 'password123', balance: 250 },
-    { studentId: '240041003', name: 'Omar Abdullah',   department: 'ME',  year: 2, password: 'password123', balance: 400 },
-    { studentId: '210041004', name: 'Nadia Islam',     department: 'CSE', year: 4, password: 'password123', balance: 350 },
+    { studentId: '230042135', name: 'Khadiza Sultana', department: 'CSE', year: 3, password: SEED_STUDENT_PASSWORD, balance: 500 },
+    { studentId: '220041001', name: 'Ahmed Hassan',    department: 'CSE', year: 4, password: SEED_STUDENT_PASSWORD, balance: 300 },
+    { studentId: '230041002', name: 'Fatima Rahman',   department: 'EEE', year: 3, password: SEED_STUDENT_PASSWORD, balance: 250 },
+    { studentId: '240041003', name: 'Omar Abdullah',   department: 'ME',  year: 2, password: SEED_STUDENT_PASSWORD, balance: 400 },
+    { studentId: '210041004', name: 'Nadia Islam',     department: 'CSE', year: 4, password: SEED_STUDENT_PASSWORD, balance: 350 },
 ]
 
 const ADMINS = [
-    { username: 'admin',  email: 'admin@iut-dhaka.edu',    fullName: 'System Administrator', password: 'admin123',       role: 'superadmin' },
-    { username: 'iutcs',  email: 'cs@iut-dhaka.edu',       fullName: 'CS Department Admin',  password: 'devsprint2026',  role: 'admin' },
+    { username: 'admin',  email: 'admin@iut-dhaka.edu',    fullName: 'System Administrator', password: SEED_ADMIN_PASSWORD,       role: 'superadmin' },
+    { username: 'iutcs',  email: 'cs@iut-dhaka.edu',       fullName: 'CS Department Admin',  password: SEED_IUTCS_ADMIN_PASSWORD, role: 'admin' },
 ]
 
 async function seed() {
@@ -62,8 +76,8 @@ async function seed() {
     }
 
     console.log('\n🎉 Seeding complete!')
-    console.log('\n📋 Student login format:  <studentId>@iut-dhaka.edu / password123')
-    console.log('📋 Admin login:           admin / admin123  OR  iutcs / devsprint2026')
+    console.log(`\n📋 Student login format:  <studentId>@iut-dhaka.edu / [SEED_STUDENT_PASSWORD]`)
+    console.log(`📋 Admin login:           admin / [SEED_ADMIN_PASSWORD]  OR  iutcs / [SEED_IUTCS_ADMIN_PASSWORD]`)
     await pool.end()
 }
 

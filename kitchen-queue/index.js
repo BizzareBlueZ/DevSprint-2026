@@ -13,7 +13,11 @@ const { chaosMiddleware, chaosRoute } = require('./chaos')
 app.use(chaosMiddleware)
 chaosRoute(app)
 
-const RABBITMQ_URL         = process.env.RABBITMQ_URL         || 'amqp://guest:guest@localhost:5672'
+if (!process.env.RABBITMQ_URL) {
+    console.error('FATAL: RABBITMQ_URL environment variable is not set. Refusing to start.')
+    process.exit(1)
+}
+const RABBITMQ_URL         = process.env.RABBITMQ_URL
 const NOTIFICATION_HUB_URL = process.env.NOTIFICATION_HUB_URL || 'http://localhost:3004'
 const KITCHEN_MIN_MS       = parseInt(process.env.KITCHEN_MIN_MS) || 3000
 const KITCHEN_MAX_MS       = parseInt(process.env.KITCHEN_MAX_MS) || 7000

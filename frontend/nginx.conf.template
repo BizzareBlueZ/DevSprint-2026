@@ -1,14 +1,11 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# HTTP-only config — used for local development.
-# In production (ENABLE_HTTPS=true), docker-entrypoint.sh renders
-# nginx-ssl.conf.template instead, which enforces HTTPS + HSTS.
-# ─────────────────────────────────────────────────────────────────────────────
 server {
-    listen 80;
+    listen ${PORT};
     server_name _;
-    server_tokens off;
     root /usr/share/nginx/html;
     index index.html;
+
+    # Allow larger payloads for admin/menu updates etc.
+    client_max_body_size 10m;
 
     # Use Docker DNS resolver for runtime upstream resolution
     resolver 127.0.0.11 valid=10s;
@@ -23,7 +20,7 @@ server {
 
     # Proxy auth API to identity-provider
     location /api/auth/ {
-        set $upstream_auth http://identity-provider:3001;
+        set $upstream_auth ${IDENTITY_PROVIDER_UPSTREAM};
         rewrite ^/api/auth/(.*) /$1 break;
         proxy_pass $upstream_auth;
         proxy_set_header Host $host;
@@ -34,7 +31,7 @@ server {
 
     # Proxy all other API calls to order-gateway
     location /api/ {
-        set $upstream_api http://order-gateway:3000;
+        set $upstream_api ${ORDER_GATEWAY_UPSTREAM};
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $upstream_api;
         proxy_set_header Host $host;
@@ -45,7 +42,7 @@ server {
 
     # Socket.IO — proxy to notification-hub with WebSocket support
     location /socket.io/ {
-        set $upstream_ws http://notification-hub:3004;
+        set $upstream_ws ${NOTIFICATION_HUB_UPSTREAM};
         proxy_pass $upstream_ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -58,7 +55,7 @@ server {
 
     # Admin proxy routes for dashboard
     location /admin/identity/ {
-        set $upstream_identity http://identity-provider:3001;
+        set $upstream_identity ${IDENTITY_PROVIDER_UPSTREAM};
         rewrite ^/admin/identity/(.*) /$1 break;
         proxy_pass $upstream_identity;
         proxy_set_header Host $host;
@@ -68,7 +65,7 @@ server {
     }
 
     location /admin/gateway/ {
-        set $upstream_gateway http://order-gateway:3000;
+        set $upstream_gateway ${ORDER_GATEWAY_UPSTREAM};
         rewrite ^/admin/gateway/(.*) /$1 break;
         proxy_pass $upstream_gateway;
         proxy_set_header Host $host;
@@ -78,7 +75,7 @@ server {
     }
 
     location /admin/stock/ {
-        set $upstream_stock http://stock-service:3002;
+        set $upstream_stock ${STOCK_SERVICE_UPSTREAM};
         rewrite ^/admin/stock/(.*) /$1 break;
         proxy_pass $upstream_stock;
         proxy_set_header Host $host;
@@ -88,7 +85,7 @@ server {
     }
 
     location /admin/kitchen/ {
-        set $upstream_kitchen http://kitchen-queue:3003;
+        set $upstream_kitchen ${KITCHEN_QUEUE_UPSTREAM};
         rewrite ^/admin/kitchen/(.*) /$1 break;
         proxy_pass $upstream_kitchen;
         proxy_set_header Host $host;
@@ -98,7 +95,7 @@ server {
     }
 
     location /admin/notifications/ {
-        set $upstream_notif http://notification-hub:3004;
+        set $upstream_notif ${NOTIFICATION_HUB_UPSTREAM};
         rewrite ^/admin/notifications/(.*) /$1 break;
         proxy_pass $upstream_notif;
         proxy_set_header Host $host;
@@ -126,4 +123,7 @@ server {
     location ~ \.(env|yaml|yml|json|sql)$ {
         deny all;
     }
+
+    # Disable server token exposure
+    server_tokens off;
 }

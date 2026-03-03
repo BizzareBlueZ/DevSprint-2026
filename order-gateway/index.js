@@ -8,10 +8,18 @@ require('dotenv').config()
 const pool = require('./db')
 const app  = express()
 
-const JWT_SECRET           = process.env.JWT_SECRET           || 'iut-cafeteria-super-secret-2026'
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start.')
+    process.exit(1)
+}
+if (!process.env.RABBITMQ_URL) {
+    console.error('FATAL: RABBITMQ_URL environment variable is not set. Refusing to start.')
+    process.exit(1)
+}
+const JWT_SECRET           = process.env.JWT_SECRET
 const STOCK_SERVICE_URL    = process.env.STOCK_SERVICE_URL    || 'http://localhost:3002'
 const NOTIFICATION_HUB_URL = process.env.NOTIFICATION_HUB_URL || 'http://localhost:3004'
-const RABBITMQ_URL         = process.env.RABBITMQ_URL         || 'amqp://guest:guest@localhost:5672'
+const RABBITMQ_URL         = process.env.RABBITMQ_URL
 const REDIS_URL            = process.env.REDIS_URL            || 'redis://localhost:6379'
 
 // ─── Metrics ───────────────────────────────────────────────────

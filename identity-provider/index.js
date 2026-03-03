@@ -6,11 +6,19 @@ const rateLimit  = require('express-rate-limit')
 const webpush    = require('web-push')
 require('dotenv').config()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'iut-cafeteria-super-secret-2026'
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start.')
+    process.exit(1)
+}
+const JWT_SECRET = process.env.JWT_SECRET
 
 // ─── Web Push VAPID Configuration ─────────────────────────────
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls'
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    console.error('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.')
+    process.exit(1)
+}
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
 
 webpush.setVapidDetails(
   'mailto:admin@iut-cafeteria.app',
@@ -149,10 +157,10 @@ app.post('/login', loginLimiter, async (req, res) => {
       sameSite: 'lax',
       path: '/',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true',
     })
 
     return res.status(200).json({
-      token,
       user: payload,
     })
 
@@ -274,8 +282,9 @@ app.post('/admin/login', async (req, res) => {
       sameSite: 'lax',
       path: '/',
       maxAge: 8 * 60 * 60 * 1000, // 8 hours
+      secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true',
     })
-    return res.status(200).json({ token, admin: payload })
+    return res.status(200).json({ admin: payload })
   } catch (err) {
     console.error('Admin login error:', err)
     return res.status(500).json({ message: 'Internal server error.' })
@@ -287,7 +296,7 @@ app.post('/admin/login', async (req, res) => {
  * Clears the httpOnly JWT cookie
  */
 app.post('/logout', (req, res) => {
-  res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/' })
+  res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/', secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true' })
   return res.status(200).json({ message: 'Logged out successfully.' })
 })
 

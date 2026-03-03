@@ -9,10 +9,14 @@ RUN npm run build
 # Stage 2: Serve with nginx
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Install openssl for certificate generation
-RUN apk add --no-cache openssl
+# Railway-friendly nginx config is generated at runtime from env vars
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx-ssl.conf.template /etc/nginx/templates/ssl.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+# Install openssl (dev certs) + envsubst (template rendering)
+RUN apk add --no-cache openssl gettext
 
 # Create SSL directory for certificates
 RUN mkdir -p /etc/nginx/ssl
@@ -28,4 +32,4 @@ RUN openssl req -x509 -nodes -days 365 -newkey rsa:4096 \
 RUN mkdir -p /var/www/certbot
 
 EXPOSE 80 443
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/bin/sh", "/docker-entrypoint.sh"]

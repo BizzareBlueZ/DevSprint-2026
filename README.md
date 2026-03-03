@@ -15,7 +15,7 @@ docker-compose up --build
 Open:
 
 - Frontend: http://localhost/
-- RabbitMQ UI: http://localhost:15672 (guest/guest)
+- RabbitMQ UI: http://localhost:15672 (credentials from `.env` — `RABBITMQ_USER` / `RABBITMQ_PASSWORD`)
 - pgAdmin: http://localhost:5050
 
 Service ports:
@@ -48,7 +48,7 @@ Frontend dev proxy:
 
 The database seed in `database/init.sql` includes students and admins.
 
-Students (password: `password123`):
+Students (password set via `SEED_STUDENT_PASSWORD` in `.env`):
 
 | Student ID | Email                   |
 | ---------- | ----------------------- |
@@ -56,10 +56,10 @@ Students (password: `password123`):
 | 220041001  | 220041001@iut-dhaka.edu |
 | 230041002  | 230041002@iut-dhaka.edu |
 
-Admins:
+Admins (passwords set via `SEED_ADMIN_PASSWORD` / `SEED_IUTCS_ADMIN_PASSWORD` in `.env`):
 
-- `admin` / `admin123`
-- `iutcs` / `devsprint2026`
+- `admin`
+- `iutcs`
 
 ---
 

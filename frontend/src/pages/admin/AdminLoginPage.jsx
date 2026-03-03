@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
                 </form>
 
                 <p className={styles.hint}>
-                    Default: <code>iutcs</code> / <code>devsprint2026</code>
+                    Contact your system administrator for access credentials.
                 </p>
             </div>
         </div>

@@ -25,6 +25,9 @@ build/
 *.sublime-project
 *.sublime-workspace
 
+# VS Code Local History (may contain historical secrets)
+.history/
+
 # Runtime
 .cache/
 .tmp/
