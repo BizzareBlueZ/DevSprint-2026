@@ -177,6 +177,29 @@ services:
     networks:
       - cafeteria-net
 
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      NODE_ENV: ${NODE_ENV:-production}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      IDENTITY_PROVIDER_URL: http://identity-provider:3001
+      ORDER_GATEWAY_URL: http://order-gateway:3000
+      STOCK_SERVICE_URL: http://stock-service:3002
+      KITCHEN_QUEUE_URL: http://kitchen-queue:3003
+      NOTIFICATION_HUB_URL: http://notification-hub:3004
+    depends_on:
+      - identity-provider
+      - order-gateway
+      - stock-service
+      - kitchen-queue
+      - notification-hub
+    networks:
+      - cafeteria-net
+
   frontend:
     build: ./frontend
     ports:

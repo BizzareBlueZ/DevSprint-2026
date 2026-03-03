@@ -6,15 +6,20 @@ const rateLimit  = require('express-rate-limit')
 const webpush    = require('web-push')
 require('dotenv').config()
 
+// ─── Observability ─────────────────────────────────────────────
+const { logger } = require('./lib/logger')
+const { incCounter, observeHistogram, toPrometheusFormat, toJSON, METRICS } = require('./lib/metrics')
+const { correlationIdMiddleware } = require('./middleware/correlationId')
+
 if (!process.env.JWT_SECRET) {
-    console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start.')
+    logger.fatal('FATAL: JWT_SECRET environment variable is not set. Refusing to start.')
     process.exit(1)
 }
 const JWT_SECRET = process.env.JWT_SECRET
 
 // ─── Web Push VAPID Configuration ─────────────────────────────
 if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    console.error('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.')
+    logger.fatal('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.')
     process.exit(1)
 }
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
@@ -39,6 +44,9 @@ app.use(cors({
   credentials: true,
 }))
 app.use(express.json())
+
+// ─── Observability Middleware ──────────────────────────────────
+app.use(correlationIdMiddleware)
 
 const { chaosMiddleware, chaosRoute } = require('./chaos')
 app.use(chaosMiddleware)
@@ -165,7 +173,7 @@ app.post('/login', loginLimiter, async (req, res) => {
     })
 
   } catch (err) {
-    console.error('Login error:', err)
+    logger.error({ correlationId: req.correlationId, error: err.message }, 'Login error')
     return res.status(500).json({ message: 'Internal server error.' })
   }
 })
@@ -556,23 +564,30 @@ app.get('/health', async (req, res) => {
  * GET /metrics
  */
 app.get('/metrics', (req, res) => {
-  res.status(200).json({
-    totalLogins:      metrics.totalLogins,
-    failedLogins:     metrics.failedLogins,
-    averageLatencyMs: metrics.requestCount > 0
-        ? Math.round(metrics.totalLatency / metrics.requestCount)
-        : 0,
-    uptime: process.uptime(),
-  })
+  const metricsData = toJSON()
+  metricsData.uptime = process.uptime()
+  res.status(200).json(metricsData)
+})
+
+/**
+ * GET /metrics/prometheus
+ */
+app.get('/metrics/prometheus', (req, res) => {
+  res.set('Content-Type', 'text/plain')
+  res.send(toPrometheusFormat())
 })
 
 // ─── Start ─────────────────────────────────────────────────────
+const { gracefulShutdown } = require('./lib/gracefulShutdown')
+
 const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  console.log(`🔐 Identity Provider running on http://localhost:${PORT}`)
-  console.log(`   POST /login    — authenticate student`)
-  console.log(`   POST /register — create student account`)
-  console.log(`   POST /verify   — validate JWT token`)
-  console.log(`   GET  /health   — service health check`)
-  console.log(`   GET  /metrics  — performance metrics`)
+const server = app.listen(PORT, () => {
+  logger.info({ port: PORT }, 'Identity Provider started')
+})
+
+gracefulShutdown(server, {
+  logger,
+  onShutdown: async () => {
+    await pool.end()
+  },
 })

@@ -6,15 +6,21 @@ require('dotenv').config()
 const { Pool } = require('pg')
 const app = express()
 
+// ─── Observability ─────────────────────────────────────────────
+const { logger } = require('./lib/logger')
+const { incCounter, setGauge, observeHistogram, toPrometheusFormat, toJSON, METRICS } = require('./lib/metrics')
+const { correlationIdMiddleware, getCorrelationHeaders } = require('./middleware/correlationId')
+
 app.use(cors())
 app.use(express.json())
+app.use(correlationIdMiddleware)
 
 const { chaosMiddleware, chaosRoute } = require('./chaos')
 app.use(chaosMiddleware)
 chaosRoute(app)
 
 if (!process.env.RABBITMQ_URL) {
-    console.error('FATAL: RABBITMQ_URL environment variable is not set. Refusing to start.')
+    logger.fatal('FATAL: RABBITMQ_URL environment variable is not set. Refusing to start.')
     process.exit(1)
 }
 const RABBITMQ_URL         = process.env.RABBITMQ_URL
@@ -36,7 +42,7 @@ let rabbitConnected = false
 async function notify(orderId, status, orderInfo = {}, studentId = null) {
     try {
         await pool.query("UPDATE orders.orders SET status = $1, updated_at = NOW() WHERE order_id = $2", [status, orderId])
-    } catch (err) { console.error('DB update error:', err.message) }
+    } catch (err) { logger.error({ orderId, error: err.message }, 'DB update error') }
     try {
         await axios.post(`${NOTIFICATION_HUB_URL}/notify`, { orderId, status, orderInfo, studentId }, { timeout: 2000 })
     } catch { /* notification hub down - fault tolerant */ }
@@ -45,14 +51,18 @@ async function notify(orderId, status, orderInfo = {}, studentId = null) {
 async function processOrder(order) {
     const { orderId, studentId, itemName } = order
     const prepTime = KITCHEN_MIN_MS + Math.random() * (KITCHEN_MAX_MS - KITCHEN_MIN_MS)
-    console.log(`Cooking order ${orderId} (${itemName}) - ${Math.round(prepTime/1000)}s`)
+    logger.info({ orderId, itemName, prepTimeMs: Math.round(prepTime) }, 'Cooking order')
     metrics.inProgress++
+    setGauge(METRICS.ORDERS_IN_PROGRESS, metrics.inProgress)
     await notify(orderId, 'IN_KITCHEN', { itemName }, studentId)
     await new Promise(resolve => setTimeout(resolve, prepTime))
     await notify(orderId, 'READY', { itemName }, studentId)
     metrics.inProgress--
+    setGauge(METRICS.ORDERS_IN_PROGRESS, metrics.inProgress)
     metrics.processed++
-    console.log(`Order ${orderId} READY`)
+    incCounter(METRICS.ORDERS_PROCESSED)
+    observeHistogram(METRICS.COOKING_DURATION_MS, prepTime)
+    logger.info({ orderId }, 'Order READY')
 }
 
 async function startConsumer() {
@@ -63,7 +73,7 @@ async function startConsumer() {
         await channel.assertQueue('orders', { durable: true })
         channel.prefetch(5)
         rabbitConnected = true
-        console.log('Connected to RabbitMQ')
+        logger.info('Connected to RabbitMQ')
         channel.consume('orders', async (msg) => {
             if (!msg) return
             try {
@@ -71,15 +81,16 @@ async function startConsumer() {
                 await processOrder(order)
                 channel.ack(msg)
             } catch (err) {
-                console.error('Processing error:', err.message)
+                logger.error({ error: err.message }, 'Processing error')
                 metrics.failed++
+                incCounter(METRICS.ORDERS_FAILED)
                 channel.nack(msg, false, false)
             }
         })
         conn.on('close', () => { rabbitConnected = false; setTimeout(startConsumer, 5000) })
     } catch {
         rabbitConnected = false
-        console.warn('RabbitMQ not available - retrying in 5s...')
+        logger.warn('RabbitMQ not available - retrying in 5s...')
         setTimeout(startConsumer, 5000)
     }
 }
@@ -99,7 +110,24 @@ app.get('/health', async (req, res) => {
         timestamp: new Date().toISOString(),
     })
 })
-app.get('/metrics', (req, res) => res.json({ totalOrders: metrics.processed, failureCount: metrics.failed, inProgress: metrics.inProgress, uptime: process.uptime() }))
+app.get('/metrics', (req, res) => {
+    const metricsData = toJSON()
+    metricsData.uptime = process.uptime()
+    res.json(metricsData)
+})
+app.get('/metrics/prometheus', (req, res) => {
+    res.set('Content-Type', 'text/plain')
+    res.send(toPrometheusFormat())
+})
+
+const { gracefulShutdown } = require('./lib/gracefulShutdown')
 
 const PORT = process.env.PORT || 3003
-app.listen(PORT, () => { console.log(`Kitchen Queue on http://localhost:${PORT}`); startConsumer() })
+const server = app.listen(PORT, () => { logger.info({ port: PORT }, 'Kitchen Queue started'); startConsumer() })
+
+gracefulShutdown(server, {
+  logger,
+  onShutdown: async () => {
+    await pool.end()
+  },
+})

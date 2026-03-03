@@ -5,6 +5,11 @@ require('dotenv').config()
 const { Pool } = require('pg')
 const app = express()
 
+// ─── Observability ─────────────────────────────────────────────
+const { logger } = require('./lib/logger')
+const { incCounter, observeHistogram, toPrometheusFormat, toJSON, METRICS } = require('./lib/metrics')
+const { correlationIdMiddleware } = require('./middleware/correlationId')
+
 const pool = new Pool({
     host:     process.env.DB_HOST     || 'localhost',
     port:     parseInt(process.env.DB_PORT) || 5432,
@@ -14,8 +19,8 @@ const pool = new Pool({
 })
 
 pool.connect((err, client, release) => {
-    if (err) console.error('❌ DB connection failed:', err.message)
-    else { console.log('✅ Connected to PostgreSQL'); release() }
+    if (err) logger.error({ error: err.message }, 'DB connection failed')
+    else { logger.info('Connected to PostgreSQL'); release() }
 })
 
 // ─── Redis (optional) ──────────────────────────────────────────
@@ -25,15 +30,16 @@ try {
     redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
         lazyConnect: true, enableOfflineQueue: false
     })
-    redisClient.connect().then(() => console.log('✅ Connected to Redis'))
-        .catch(() => { console.warn('⚠️  Redis not available'); redisClient = null })
-} catch { console.warn('⚠️  Redis not available') }
+    redisClient.connect().then(() => logger.info('Connected to Redis'))
+        .catch(() => { logger.warn('Redis not available'); redisClient = null })
+} catch { logger.warn('Redis not available') }
 
 // ─── Metrics ───────────────────────────────────────────────────
 const metrics = { totalOrders: 0, failureCount: 0, totalLatency: 0, requestCount: 0 }
 
 app.use(cors())
 app.use(express.json())
+app.use(correlationIdMiddleware)
 
 const { chaosMiddleware, chaosRoute } = require('./chaos')
 app.use(chaosMiddleware)
@@ -59,7 +65,7 @@ app.get('/stock/:itemId', async (req, res) => {
 
         res.json({ itemId, quantity, source: 'database' })
     } catch (err) {
-        console.error('Stock fetch error:', err)
+        logger.error({ correlationId: req.correlationId, error: err.message, itemId }, 'Stock fetch error')
         res.status(500).json({ message: 'Failed to fetch stock.' })
     }
 })
@@ -142,7 +148,7 @@ app.post('/stock/:itemId/decrement', async (req, res) => {
             return res.status(200).json({ message: 'Stock decremented.', newQuantity })
 
         } catch (err) {
-            console.error(`Stock decrement error (attempt ${attempt + 1}):`, err)
+            logger.error({ correlationId: req.correlationId, error: err.message, itemId, attempt: attempt + 1 }, 'Stock decrement error')
             if (attempt === MAX_RETRIES - 1) {
                 metrics.failureCount++
                 return res.status(500).json({ message: 'Failed to decrement stock.' })
@@ -176,7 +182,7 @@ app.get('/admin/stock', async (req, res) => {
             threshold
         })
     } catch (err) {
-        console.error('Admin stock fetch error:', err)
+        logger.error({ correlationId: req.correlationId, error: err.message }, 'Admin stock fetch error')
         res.status(500).json({ message: 'Failed to fetch stock data.' })
     }
 })
@@ -202,7 +208,7 @@ app.get('/admin/stock/alerts', async (req, res) => {
                 : 'All stock levels are healthy'
         })
     } catch (err) {
-        console.error('Stock alerts error:', err)
+        logger.error({ correlationId: req.correlationId, error: err.message }, 'Stock alerts error')
         res.status(500).json({ message: 'Failed to fetch stock alerts.' })
     }
 })
@@ -225,7 +231,7 @@ app.put('/admin/stock/:itemId', async (req, res) => {
         if (redisClient) await redisClient.set(`stock:${itemId}`, quantity, 'EX', 60).catch(() => {})
         res.json({ message: 'Stock updated.', stock: result.rows[0] })
     } catch (err) {
-        console.error('Update stock error:', err)
+        logger.error({ correlationId: req.correlationId, error: err.message }, 'Update stock error')
         res.status(500).json({ message: 'Failed to update stock.' })
     }
 })
@@ -248,15 +254,28 @@ app.get('/health', async (req, res) => {
 
 // ─── GET /metrics ──────────────────────────────────────────────
 app.get('/metrics', (req, res) => {
-    res.json({
-        totalOrders:      metrics.totalOrders,
-        failureCount:     metrics.failureCount,
-        averageLatencyMs: metrics.requestCount > 0 ? Math.round(metrics.totalLatency / metrics.requestCount) : 0,
-        uptime:           process.uptime(),
-    })
+    const metricsData = toJSON()
+    metricsData.uptime = process.uptime()
+    res.json(metricsData)
 })
 
+// ─── GET /metrics/prometheus ───────────────────────────────────
+app.get('/metrics/prometheus', (req, res) => {
+    res.set('Content-Type', 'text/plain')
+    res.send(toPrometheusFormat())
+})
+
+const { gracefulShutdown } = require('./lib/gracefulShutdown')
+
 const PORT = process.env.PORT || 3002
-app.listen(PORT, () => console.log(`📦 Stock Service running on http://localhost:${PORT}`))
+const server = app.listen(PORT, () => logger.info({ port: PORT }, 'Stock Service started'))
+
+gracefulShutdown(server, {
+  logger,
+  onShutdown: async () => {
+    await pool.end()
+    if (redisClient) await redisClient.quit().catch(() => {})
+  },
+})
 
 module.exports = { app, pool }

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+build/
+coverage/
+.history/
+*.min.js
+package-lock.json

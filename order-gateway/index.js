@@ -90,7 +90,22 @@ function requireAuth(req, res, next) {
 
     if (!token) return res.status(401).json({ message: 'No token provided.' })
     try {
-        req.user = jwt.verify(token, JWT_SECRET)
+        const decoded = jwt.verify(token, JWT_SECRET)
+        const normalizedStudentId =
+            decoded?.studentId ||
+            decoded?.student_id ||
+            (typeof decoded?.email === 'string' && decoded.email.includes('@')
+                ? decoded.email.split('@')[0]
+                : null)
+
+        req.user = {
+            ...decoded,
+            studentId: normalizedStudentId,
+        }
+
+        if (!req.user.studentId) {
+            return res.status(401).json({ message: 'Invalid token payload: missing student identifier.' })
+        }
         next()
     } catch {
         return res.status(401).json({ message: 'Invalid or expired token.' })

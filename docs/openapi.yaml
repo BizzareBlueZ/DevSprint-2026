@@ -1,0 +1,851 @@
+openapi: 3.0.3
+info:
+  title: IUT Cafeteria API
+  description: |
+    API for the IUT Cafeteria ordering system.
+    
+    ## Authentication
+    All endpoints (except /login, /register, /health) require JWT authentication.
+    Pass the token via:
+    - `Authorization: Bearer <token>` header
+    - `token` httpOnly cookie
+    
+    ## Correlation IDs
+    All requests are assigned an `x-correlation-id` header for distributed tracing.
+  version: 1.0.0
+  contact:
+    name: IUT Cafeteria Team
+    email: admin@iut-cafeteria.app
+
+servers:
+  - url: http://localhost:3000
+    description: Order Gateway (Development)
+  - url: http://localhost:3001
+    description: Identity Provider (Development)
+  - url: http://localhost:3002
+    description: Stock Service (Development)
+
+tags:
+  - name: Auth
+    description: Authentication and user management
+  - name: Menu
+    description: Menu item operations
+  - name: Orders
+    description: Order management
+  - name: Wallet
+    description: Wallet and transactions
+  - name: Cafeteria
+    description: Cafeteria token booking
+  - name: Admin
+    description: Administrative operations
+  - name: Health
+    description: Health checks and metrics
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invalid credentials."
+
+    User:
+      type: object
+      properties:
+        studentId:
+          type: string
+          example: "230042135"
+        email:
+          type: string
+          example: "230042135@iut-dhaka.edu"
+        name:
+          type: string
+          example: "John Doe"
+        department:
+          type: string
+          example: "CSE"
+        year:
+          type: integer
+          example: 3
+
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Chicken Biryani"
+        description:
+          type: string
+          example: "Fragrant rice with tender chicken"
+        price:
+          type: number
+          format: float
+          example: 120.00
+        category:
+          type: string
+          enum: [rice, curry, snacks, drinks, dessert]
+        is_available:
+          type: boolean
+        stock:
+          type: integer
+          example: 50
+
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, STOCK_VERIFIED, IN_KITCHEN, READY, PICKED_UP, FAILED, CANCELLED]
+        amount:
+          type: number
+          format: float
+        item_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [credit, debit]
+        amount:
+          type: number
+          format: float
+        balance_after:
+          type: number
+          format: float
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        service:
+          type: string
+        dependencies:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+  parameters:
+    CorrelationId:
+      name: x-correlation-id
+      in: header
+      description: Trace ID for distributed tracing
+      schema:
+        type: string
+        format: uuid
+
+    IdempotencyKey:
+      name: x-idempotency-key
+      in: header
+      description: Idempotency key for safe retries
+      schema:
+        type: string
+        format: uuid
+
+paths:
+  # ─── Auth ─────────────────────────────────────────────────────
+  /login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user
+      description: Login with student ID and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  description: Student ID or full email
+                  example: "230042135"
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: token=eyJhbGc...; HttpOnly; Path=/
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many login attempts
+
+  /register:
+    post:
+      tags: [Auth]
+      summary: Register new student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId, email, password, name, department]
+              properties:
+                studentId:
+                  type: string
+                  pattern: '^\d{9}$'
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                name:
+                  type: string
+                department:
+                  type: string
+                year:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+      responses:
+        '201':
+          description: Registration successful
+        '409':
+          description: Student already exists
+
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Logout user
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Logout successful
+
+  /me:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ─── Menu ─────────────────────────────────────────────────────
+  /menu:
+    get:
+      tags: [Menu]
+      summary: Get available menu items
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: List of menu items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuItem'
+
+  /menu/{itemId}/reviews:
+    get:
+      tags: [Menu]
+      summary: Get reviews for a menu item
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Reviews list
+
+  # ─── Orders ───────────────────────────────────────────────────
+  /orders:
+    get:
+      tags: [Orders]
+      summary: Get order history
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Order history with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+    post:
+      tags: [Orders]
+      summary: Place a new order
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [itemId]
+              properties:
+                itemId:
+                  type: integer
+                type:
+                  type: string
+                  enum: [dinner, iftar]
+                  default: dinner
+                scheduledPickupTime:
+                  type: string
+                  format: date-time
+      responses:
+        '202':
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: string
+                    format: uuid
+                  message:
+                    type: string
+                  item:
+                    type: string
+        '402':
+          description: Insufficient balance
+        '409':
+          description: Out of stock
+
+  /orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: Get order details
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+
+  /orders/verify-qr:
+    post:
+      tags: [Orders]
+      summary: Verify QR code for pickup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [qrCode]
+              properties:
+                qrCode:
+                  type: string
+      responses:
+        '200':
+          description: Order verified
+        '404':
+          description: Invalid QR code
+        '409':
+          description: Already picked up
+
+  # ─── Wallet ───────────────────────────────────────────────────
+  /wallet/balance:
+    get:
+      tags: [Wallet]
+      summary: Get wallet balance
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Current balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    format: float
+
+  /wallet/transactions:
+    get:
+      tags: [Wallet]
+      summary: Get transaction history
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+
+  /wallet/topup:
+    post:
+      tags: [Wallet]
+      summary: Top up wallet
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  minimum: 10
+                method:
+                  type: string
+                  enum: [bkash, nagad, rocket, bank]
+                  default: bkash
+                reference:
+                  type: string
+      responses:
+        '200':
+          description: Top-up successful
+
+  /wallet/emergency/status:
+    get:
+      tags: [Wallet]
+      summary: Get emergency loan status
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Emergency loan info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  outstanding:
+                    type: number
+                  available:
+                    type: number
+                  limit:
+                    type: number
+
+  /wallet/emergency/request:
+    post:
+      tags: [Wallet]
+      summary: Request emergency balance
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  minimum: 10
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Emergency balance added
+
+  # ─── Cafeteria Tokens ─────────────────────────────────────────
+  /cafeteria/tokens:
+    get:
+      tags: [Cafeteria]
+      summary: Get booked tokens
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Token list
+
+  /cafeteria/tokens/bulk:
+    post:
+      tags: [Cafeteria]
+      summary: Book multiple meal tokens
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tokens]
+              properties:
+                tokens:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [dinner, iftar]
+                      date:
+                        type: string
+                        format: date
+      responses:
+        '202':
+          description: Tokens booked
+
+  # ─── Reviews ──────────────────────────────────────────────────
+  /reviews:
+    post:
+      tags: [Orders]
+      summary: Submit order review
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, rating]
+              properties:
+                orderId:
+                  type: string
+                  format: uuid
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Review submitted
+
+  # ─── Admin ────────────────────────────────────────────────────
+  /admin/menu:
+    get:
+      tags: [Admin]
+      summary: List all menu items (including unavailable)
+      responses:
+        '200':
+          description: Full menu list
+
+    post:
+      tags: [Admin]
+      summary: Create menu item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, price, category]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                category:
+                  type: string
+                is_available:
+                  type: boolean
+                  default: true
+                image_url:
+                  type: string
+                initial_stock:
+                  type: integer
+                  default: 50
+      responses:
+        '201':
+          description: Item created
+
+  /admin/menu/{id}:
+    put:
+      tags: [Admin]
+      summary: Update menu item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Item updated
+
+    delete:
+      tags: [Admin]
+      summary: Delete menu item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Item deleted
+
+  /admin/stock/{itemId}:
+    put:
+      tags: [Admin]
+      summary: Update stock quantity
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 0
+      responses:
+        '200':
+          description: Stock updated
+
+  /admin/analytics:
+    get:
+      tags: [Admin]
+      summary: Get analytics data
+      responses:
+        '200':
+          description: Analytics dashboard data
+
+  # ─── Health & Metrics ─────────────────────────────────────────
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Service unhealthy
+
+  /metrics:
+    get:
+      tags: [Health]
+      summary: Get metrics (JSON)
+      responses:
+        '200':
+          description: Metrics data
+
+  /metrics/prometheus:
+    get:
+      tags: [Health]
+      summary: Get metrics (Prometheus format)
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /time-slots:
+    get:
+      tags: [Orders]
+      summary: Get available pickup time slots
+      responses:
+        '200':
+          description: Available slots
+
+  # ─── Stock Service ────────────────────────────────────────────
+  /stock/{itemId}:
+    get:
+      tags: [Admin]
+      summary: Get stock level
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Stock info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  itemId:
+                    type: integer
+                  quantity:
+                    type: integer
+                  source:
+                    type: string
+                    enum: [cache, database]
+
+  /stock/{itemId}/decrement:
+    post:
+      tags: [Admin]
+      summary: Decrement stock (internal)
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Stock decremented
+        '409':
+          description: Out of stock or conflict

@@ -23,7 +23,7 @@ module.exports = {
           jsx: true,
         },
       },
-      extends: ['eslint:recommended'],
+      extends: ['eslint:recommended', 'prettier'],
       rules: {
         'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       },
@@ -39,7 +39,7 @@ module.exports = {
         ecmaVersion: 'latest',
         sourceType: 'script',
       },
-      extends: ['eslint:recommended'],
+      extends: ['eslint:recommended', 'prettier'],
       rules: {
         'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       },
@@ -59,7 +59,7 @@ module.exports = {
           jsx: true,
         },
       },
-      extends: ['eslint:recommended'],
+      extends: ['eslint:recommended', 'prettier'],
       rules: {
         'no-undef': 'off',
         'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],

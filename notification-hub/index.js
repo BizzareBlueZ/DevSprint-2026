@@ -6,6 +6,11 @@ const { Pool } = require('pg')
 const webpush = require('web-push')
 require('dotenv').config()
 
+// ─── Observability ─────────────────────────────────────────────
+const { logger } = require('./lib/logger')
+const { incCounter, setGauge, toPrometheusFormat, toJSON, METRICS } = require('./lib/metrics')
+const { correlationIdMiddleware } = require('./middleware/correlationId')
+
 const app    = express()
 const server = http.createServer(app)
 
@@ -20,7 +25,7 @@ const pool = new Pool({
 
 // ─── Web Push VAPID Configuration ──────────────────────────────
 if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    console.error('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.')
+    logger.fatal('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.')
     process.exit(1)
 }
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
@@ -42,6 +47,7 @@ const io = new Server(server, {
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'] }))
 app.use(express.json())
+app.use(correlationIdMiddleware)
 
 const { chaosMiddleware, chaosRoute } = require('./chaos')
 app.use(chaosMiddleware)
@@ -75,12 +81,12 @@ async function sendPushNotification(studentId, title, body, data = {}) {
         if (err.statusCode === 410 || err.statusCode === 404) {
           await pool.query('DELETE FROM identity.push_subscriptions WHERE endpoint = $1', [sub.endpoint])
         }
-        console.error('Push failed:', err.message)
+        logger.error({ studentId, error: err.message }, 'Push failed')
       }
     }
     return sent
   } catch (err) {
-    console.error('Push query failed:', err.message)
+    logger.error({ studentId, error: err.message }, 'Push query failed')
     return 0
   }
 }
@@ -88,12 +94,13 @@ async function sendPushNotification(studentId, title, body, data = {}) {
 // ─── Socket.IO — student connects and joins their order room ───
 io.on('connection', (socket) => {
     metrics.activeConnections++
-    console.log(`🔌 Client connected: ${socket.id} (total: ${metrics.activeConnections})`)
+    setGauge(METRICS.ACTIVE_CONNECTIONS, metrics.activeConnections)
+    logger.info({ socketId: socket.id, total: metrics.activeConnections }, 'Client connected')
 
     // Student joins a room named by their orderId (for order tracker page)
     socket.on('join-order', ({ orderId }) => {
         socket.join(orderId)
-        console.log(`📦 Socket ${socket.id} joined order room: ${orderId}`)
+        logger.debug({ socketId: socket.id, orderId }, 'Socket joined order room')
 
         // Immediately confirm connection
         socket.emit('order-status', {
@@ -107,13 +114,14 @@ io.on('connection', (socket) => {
     socket.on('join-student', ({ studentId }) => {
         if (studentId) {
             socket.join(`student-${studentId}`)
-            console.log(`👤 Socket ${socket.id} joined student room: student-${studentId}`)
+            logger.debug({ socketId: socket.id, studentId }, 'Socket joined student room')
         }
     })
 
     socket.on('disconnect', () => {
         metrics.activeConnections--
-        console.log(`🔌 Client disconnected: ${socket.id} (total: ${metrics.activeConnections})`)
+        setGauge(METRICS.ACTIVE_CONNECTIONS, metrics.activeConnections)
+        logger.info({ socketId: socket.id, total: metrics.activeConnections }, 'Client disconnected')
     })
 })
 
@@ -151,12 +159,14 @@ app.post('/notify', async (req, res) => {
           { url: '/order-tracker', orderId }
         )
         if (pushSent > 0) {
-            console.log(`📲 Sent push notification to ${studentId} (${pushSent} devices)`)
+            incCounter(METRICS.PUSH_SENT, {}, pushSent)
+            logger.info({ studentId, pushSent }, 'Sent push notification')
         }
     }
 
     metrics.notificationsSent++
-    console.log(`📣 Notified order ${orderId}: ${status}`)
+    incCounter(METRICS.NOTIFICATIONS_SENT, { status })
+    logger.info({ orderId, status }, 'Notified order')
 
     res.status(200).json({ message: 'Notification sent.', orderId, status })
 })
@@ -176,18 +186,29 @@ app.get('/health', (req, res) => {
 
 // ─── GET /metrics ──────────────────────────────────────────────
 app.get('/metrics', (req, res) => {
-    res.json({
-        totalOrders:       metrics.notificationsSent,
-        failureCount:      0,
-        activeConnections: metrics.activeConnections,
-        uptime:            process.uptime(),
-    })
+    const metricsData = toJSON()
+    metricsData.uptime = process.uptime()
+    res.json(metricsData)
 })
 
-// ─── Start ─────────────────────────────────────────────────────
+// ─── GET /metrics/prometheus ───────────────────────────────────
+app.get('/metrics/prometheus', (req, res) => {
+    res.set('Content-Type', 'text/plain')
+    res.send(toPrometheusFormat())
+})
+
+// ─── Start ─────────────────────────────────────────────────
+const { gracefulShutdown } = require('./lib/gracefulShutdown')
+
 const PORT = process.env.PORT || 3004
 server.listen(PORT, () => {
-    console.log(`🔔 Notification Hub running on http://localhost:${PORT}`)
-    console.log(`   POST /notify  — push status update to student`)
-    console.log(`   Socket.IO     — students connect for live updates`)
+    logger.info({ port: PORT }, 'Notification Hub started')
+})
+
+gracefulShutdown(server, {
+  logger,
+  onShutdown: async () => {
+    await pool.end()
+    io.close()
+  },
 })
