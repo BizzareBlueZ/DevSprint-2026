@@ -598,6 +598,11 @@ app.get('/health', async (req, res) => {
 app.get('/metrics', (req, res) => {
   const metricsData = toJSON()
   metricsData.uptime = process.uptime()
+  // Dashboard-compatible fields
+  metricsData.totalOrders = metrics.totalLogins
+  metricsData.failureCount = metrics.failedLogins
+  metricsData.averageLatencyMs =
+    metrics.requestCount > 0 ? Math.round(metrics.totalLatency / metrics.requestCount) : 0
   res.status(200).json(metricsData)
 })
 

@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# Ensure vite and other bin stubs are executable (fixes CRLF/permission issues from Windows)
+RUN chmod +x node_modules/.bin/* 2>/dev/null || true
 RUN npm run build
 
 # Stage 2: Serve with nginx

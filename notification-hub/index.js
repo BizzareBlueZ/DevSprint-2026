@@ -174,6 +174,29 @@ app.post('/notify', async (req, res) => {
   res.status(200).json({ message: 'Notification sent.', orderId, status })
 })
 
+// ─── POST /service-status — broadcast service health changes ───
+// Called by admin dashboard when a service is killed/restored
+app.post('/service-status', (req, res) => {
+  const { serviceName, status, message } = req.body
+
+  if (!serviceName || !status) {
+    return res.status(400).json({ message: 'serviceName and status are required.' })
+  }
+
+  const payload = {
+    serviceName,
+    status, // 'killed' or 'restored'
+    message: message || `${serviceName} has been ${status}.`,
+    timestamp: new Date().toISOString(),
+  }
+
+  // Broadcast to ALL connected clients
+  io.emit('service-status', payload)
+  logger.info({ serviceName, status }, 'Service status broadcast')
+
+  res.status(200).json({ message: 'Service status broadcast sent.', ...payload })
+})
+
 // ─── GET /health ───────────────────────────────────────────────
 app.get('/health', (req, res) => {
   const socketReady = io.engine && io.engine.clientsCount !== undefined
@@ -191,6 +214,10 @@ app.get('/health', (req, res) => {
 app.get('/metrics', (req, res) => {
   const metricsData = toJSON()
   metricsData.uptime = process.uptime()
+  // Dashboard-compatible fields
+  metricsData.totalOrders = metrics.notificationsSent
+  metricsData.failureCount = 0
+  metricsData.averageLatencyMs = 0
   res.json(metricsData)
 })
 

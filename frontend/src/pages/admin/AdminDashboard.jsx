@@ -136,6 +136,22 @@ export default function AdminDashboard() {
           withCredentials: true,
         }
       )
+      // Broadcast service status change to all connected students
+      try {
+        await axios.post(
+          '/admin/notifications/service-status',
+          {
+            serviceName: svc.name,
+            status: willKill ? 'killed' : 'restored',
+            message: willKill
+              ? `⚠️ ${svc.name} is currently down. Some features may be unavailable.`
+              : `✅ ${svc.name} has been restored and is back online.`,
+          },
+          { timeout: 2000, withCredentials: true }
+        )
+      } catch {
+        /* notification hub may be down — non-blocking */
+      }
     } catch (err) {
       if (err.response?.status === 401) {
         setChaosLoading(prev => ({ ...prev, [svc.id]: false }))

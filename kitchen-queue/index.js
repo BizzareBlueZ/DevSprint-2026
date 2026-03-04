@@ -134,6 +134,10 @@ app.get('/health', async (req, res) => {
 app.get('/metrics', (req, res) => {
   const metricsData = toJSON()
   metricsData.uptime = process.uptime()
+  // Dashboard-compatible fields
+  metricsData.totalOrders = metrics.processed
+  metricsData.failureCount = metrics.failed
+  metricsData.averageLatencyMs = 0
   res.json(metricsData)
 })
 app.get('/metrics/prometheus', (req, res) => {

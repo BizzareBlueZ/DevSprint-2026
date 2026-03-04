@@ -43,9 +43,15 @@ export function enableHttpOnlyCookies(axiosInstance) {
     response => response,
     error => {
       if (error.response?.status === 401) {
-        // Skip redirect for login/register endpoints (let the page handle the error)
         const url = error.config?.url || ''
+
+        // Skip redirect for login/register endpoints (let the page handle the error)
         if (url.includes('/login') || url.includes('/register')) {
+          return Promise.reject(error)
+        }
+
+        // Skip redirect for admin proxy routes (admin dashboard handles its own auth)
+        if (url.startsWith('/admin/')) {
           return Promise.reject(error)
         }
 

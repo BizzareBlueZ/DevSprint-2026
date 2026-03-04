@@ -47,6 +47,21 @@ export function useOrderNotifications() {
       }
     })
 
+    // Listen for service status changes (chaos mode kill/restore)
+    socket.on('service-status', data => {
+      if (data.status === 'killed') {
+        addToast(data.message || `${data.serviceName} is currently down.`, {
+          type: 'error',
+          title: 'Service Disruption',
+        })
+      } else if (data.status === 'restored') {
+        addToast(data.message || `${data.serviceName} is back online.`, {
+          type: 'success',
+          title: 'Service Restored',
+        })
+      }
+    })
+
     return () => {
       socket.disconnect()
       socketRef.current = null
