@@ -19,14 +19,25 @@ module.exports = function createAdminRoutes(pool, { redisClient }) {
       `)
       res.json({ items: result.rows })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Admin menu fetch error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Admin menu fetch error'
+      )
       res.status(500).json({ message: 'Failed to fetch menu items.' })
     }
   })
 
   // POST /admin/menu
   router.post('/menu', async (req, res) => {
-    const { name, description, price, category, is_available = true, image_url, initial_stock = 50 } = req.body
+    const {
+      name,
+      description,
+      price,
+      category,
+      is_available = true,
+      image_url,
+      initial_stock = 50,
+    } = req.body
     if (!name || !price || !category) {
       return res.status(400).json({ message: 'name, price and category are required.' })
     }
@@ -47,7 +58,10 @@ module.exports = function createAdminRoutes(pool, { redisClient }) {
       logger.info({ correlationId: req.correlationId, itemId: item.id, name }, 'Menu item created')
       res.status(201).json({ message: 'Menu item created.', item })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Create menu item error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Create menu item error'
+      )
       res.status(500).json({ message: 'Failed to create menu item.' })
     }
   })
@@ -73,7 +87,10 @@ module.exports = function createAdminRoutes(pool, { redisClient }) {
       logger.info({ correlationId: req.correlationId, itemId: id }, 'Menu item updated')
       res.json({ message: 'Menu item updated.', item: result.rows[0] })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Update menu item error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Update menu item error'
+      )
       res.status(500).json({ message: 'Failed to update menu item.' })
     }
   })
@@ -82,7 +99,9 @@ module.exports = function createAdminRoutes(pool, { redisClient }) {
   router.delete('/menu/:id', async (req, res) => {
     const { id } = req.params
     try {
-      const result = await pool.query('DELETE FROM public.menu_items WHERE id = $1 RETURNING *', [id])
+      const result = await pool.query('DELETE FROM public.menu_items WHERE id = $1 RETURNING *', [
+        id,
+      ])
       if (result.rows.length === 0) return res.status(404).json({ message: 'Menu item not found.' })
 
       await pool.query('DELETE FROM inventory.stock WHERE item_id = $1', [id])
@@ -90,7 +109,10 @@ module.exports = function createAdminRoutes(pool, { redisClient }) {
       logger.info({ correlationId: req.correlationId, itemId: id }, 'Menu item deleted')
       res.json({ message: 'Menu item deleted.' })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Delete menu item error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Delete menu item error'
+      )
       res.status(500).json({ message: 'Failed to delete menu item.' })
     }
   })

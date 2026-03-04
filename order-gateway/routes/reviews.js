@@ -32,7 +32,11 @@ module.exports = function createReviewRoutes(pool) {
       }
 
       const order = orderCheck.rows[0]
-      if (order.status !== 'READY' && order.status !== 'COMPLETED' && order.status !== 'PICKED_UP') {
+      if (
+        order.status !== 'READY' &&
+        order.status !== 'COMPLETED' &&
+        order.status !== 'PICKED_UP'
+      ) {
         return res.status(400).json({ message: 'Can only review completed orders.' })
       }
 

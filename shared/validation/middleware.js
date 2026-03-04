@@ -88,11 +88,11 @@ function validate(validators) {
   if (validators.body) middlewares.push(validateBody(validators.body))
   if (validators.query) middlewares.push(validateQuery(validators.query))
   if (validators.params) middlewares.push(validateParams(validators.params))
-  
+
   return (req, res, next) => {
-    const runMiddleware = (index) => {
+    const runMiddleware = index => {
       if (index >= middlewares.length) return next()
-      middlewares[index](req, res, (err) => {
+      middlewares[index](req, res, err => {
         if (err) return next(err)
         runMiddleware(index + 1)
       })

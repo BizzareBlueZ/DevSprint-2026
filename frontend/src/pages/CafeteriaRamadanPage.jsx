@@ -11,19 +11,75 @@ const MEAL_TYPES = [
 ]
 
 const IFTAR_MENU = [
-  { id: 1, name: 'Iftar Platter', emoji: '🍱', desc: 'Dates, samosa, jilapi & juice', price: 80, stock: 24 },
-  { id: 2, name: 'Beef Biryani', emoji: '🍛', desc: 'Aromatic basmati with beef', price: 120, stock: 8 },
-  { id: 3, name: 'Chicken Roast', emoji: '🍗', desc: 'Half roast with naan bread', price: 110, stock: 15 },
-  { id: 4, name: 'Special Haleem', emoji: '🥘', desc: 'Slow-cooked lentil & meat', price: 90, stock: 0 },
+  {
+    id: 1,
+    name: 'Iftar Platter',
+    emoji: '🍱',
+    desc: 'Dates, samosa, jilapi & juice',
+    price: 80,
+    stock: 24,
+  },
+  {
+    id: 2,
+    name: 'Beef Biryani',
+    emoji: '🍛',
+    desc: 'Aromatic basmati with beef',
+    price: 120,
+    stock: 8,
+  },
+  {
+    id: 3,
+    name: 'Chicken Roast',
+    emoji: '🍗',
+    desc: 'Half roast with naan bread',
+    price: 110,
+    stock: 15,
+  },
+  {
+    id: 4,
+    name: 'Special Haleem',
+    emoji: '🥘',
+    desc: 'Slow-cooked lentil & meat',
+    price: 90,
+    stock: 0,
+  },
   { id: 5, name: 'Fruit Chaat', emoji: '🥗', desc: 'Seasonal fruit mix', price: 45, stock: 40 },
   { id: 6, name: 'Mango Lassi', emoji: '🥤', desc: 'Chilled mango smoothie', price: 55, stock: 32 },
 ]
 
 const DINNER_MENU = [
-  { id: 7, name: 'Rice & Curry', emoji: '🍚', desc: 'Spiced rice with chicken curry', price: 70, stock: 30 },
-  { id: 8, name: 'Noodle Stir Fry', emoji: '🍝', desc: 'Egg noodles with vegetables', price: 65, stock: 25 },
-  { id: 9, name: 'Fish Fillet', emoji: '🐟', desc: 'Crispy fried fish with rice', price: 85, stock: 18 },
-  { id: 10, name: 'Veggie Platter', emoji: '🥦', desc: 'Mixed vegetables & paneer', price: 60, stock: 35 },
+  {
+    id: 7,
+    name: 'Rice & Curry',
+    emoji: '🍚',
+    desc: 'Spiced rice with chicken curry',
+    price: 70,
+    stock: 30,
+  },
+  {
+    id: 8,
+    name: 'Noodle Stir Fry',
+    emoji: '🍝',
+    desc: 'Egg noodles with vegetables',
+    price: 65,
+    stock: 25,
+  },
+  {
+    id: 9,
+    name: 'Fish Fillet',
+    emoji: '🐟',
+    desc: 'Crispy fried fish with rice',
+    price: 85,
+    stock: 18,
+  },
+  {
+    id: 10,
+    name: 'Veggie Platter',
+    emoji: '🥦',
+    desc: 'Mixed vegetables & paneer',
+    price: 60,
+    stock: 35,
+  },
 ]
 
 const IFTAR_TOKEN_PRICE = 100
@@ -63,7 +119,9 @@ export default function CafeteriaRamadanPage() {
       ])
       if (tokensRes.status === 'fulfilled') setBookedTokens(tokensRes.value.data.tokens ?? [])
       if (balanceRes.status === 'fulfilled') setBalance(balanceRes.value.data.balance ?? 0)
-    } catch {}
+    } catch {
+      // errors handled by Promise.allSettled
+    }
   }
 
   // Countdown timer
@@ -123,7 +181,7 @@ export default function CafeteriaRamadanPage() {
     }
   }
 
-  const formatTime = (num) => String(num).padStart(2, '0')
+  const formatTime = num => String(num).padStart(2, '0')
 
   // Build 2-week advance booking calendar (tomorrow through 14 days out)
   const today = new Date()
@@ -207,7 +265,8 @@ export default function CafeteriaRamadanPage() {
         <div className={styles.bannerLeft}>
           <div className={styles.countdownLabel}>Iftar begins in</div>
           <div className={styles.countdownTime}>
-            {formatTime(countdown.hours)}:{formatTime(countdown.minutes)}:{formatTime(countdown.seconds)}
+            {formatTime(countdown.hours)}:{formatTime(countdown.minutes)}:
+            {formatTime(countdown.seconds)}
           </div>
           <div className={styles.pickupLabel}>Pick-up at counter B</div>
         </div>
@@ -251,8 +310,14 @@ export default function CafeteriaRamadanPage() {
               <div className={styles.foodName}>{item.name}</div>
               <div className={styles.foodDesc}>{item.desc}</div>
               <div className={styles.foodPrice}>৳{item.price}</div>
-              <div className={`${styles.foodStock} ${isOutOfStock ? styles.stockZero : isLowStock ? styles.stockLow : styles.stockOk}`}>
-                {isOutOfStock ? 'Out of stock' : isLowStock ? `⚠ Only ${item.stock} left` : `${item.stock} available`}
+              <div
+                className={`${styles.foodStock} ${isOutOfStock ? styles.stockZero : isLowStock ? styles.stockLow : styles.stockOk}`}
+              >
+                {isOutOfStock
+                  ? 'Out of stock'
+                  : isLowStock
+                    ? `⚠ Only ${item.stock} left`
+                    : `${item.stock} available`}
               </div>
             </div>
           )
@@ -262,7 +327,10 @@ export default function CafeteriaRamadanPage() {
       {/* Order Bar */}
       <div className={styles.orderBar}>
         <div className={styles.orderInfo}>
-          Selected: <span>{selectedItem ? `${selectedItem.name} — ৳${selectedItem.price}` : 'Nothing yet'}</span>
+          Selected:{' '}
+          <span>
+            {selectedItem ? `${selectedItem.name} — ৳${selectedItem.price}` : 'Nothing yet'}
+          </span>
         </div>
         <button
           className={styles.orderBtn}
@@ -282,9 +350,7 @@ export default function CafeteriaRamadanPage() {
               Select upcoming dates to pre-book your meals
             </div>
           </div>
-          <div className={styles.walletBadge}>
-            Balance: ৳{Number(balance).toFixed(0)}
-          </div>
+          <div className={styles.walletBadge}>Balance: ৳{Number(balance).toFixed(0)}</div>
         </div>
 
         {/* Meal Type Tabs */}
@@ -328,7 +394,9 @@ export default function CafeteriaRamadanPage() {
         <div className={styles.calendarGrid}>
           <div className={styles.calendarHeader}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-              <div key={d} className={styles.calDayLabel}>{d}</div>
+              <div key={d} className={styles.calDayLabel}>
+                {d}
+              </div>
             ))}
           </div>
           {calendarWeeks.map((week, wi) => (
@@ -339,7 +407,8 @@ export default function CafeteriaRamadanPage() {
                 const bookedIftar = isDateBookedForMeal(day, 'iftar')
                 const selected = isDateSelected(day)
                 const isToday = isSameDay(day, today)
-                const isBookedForActiveMeal = activeMealType === 'dinner' ? bookedDinner : bookedIftar
+                const isBookedForActiveMeal =
+                  activeMealType === 'dinner' ? bookedDinner : bookedIftar
 
                 return (
                   <div
@@ -373,7 +442,10 @@ export default function CafeteriaRamadanPage() {
         {selectedDates.length > 0 && (
           <div className={styles.bookingSummary}>
             <div className={styles.bookingDetails}>
-              <span>{selectedDates.length} day{selectedDates.length > 1 ? 's' : ''} selected for {activeMealType === 'dinner' ? 'Dinner' : 'Iftar'}</span>
+              <span>
+                {selectedDates.length} day{selectedDates.length > 1 ? 's' : ''} selected for{' '}
+                {activeMealType === 'dinner' ? 'Dinner' : 'Iftar'}
+              </span>
               <span className={styles.bookingCost}>Total: ৳{totalBookingCost}</span>
             </div>
             <button
@@ -381,14 +453,22 @@ export default function CafeteriaRamadanPage() {
               onClick={bookAdvance}
               disabled={bookingLoading || totalBookingCost > balance}
             >
-              {bookingLoading ? 'Booking...' : totalBookingCost > balance ? 'Insufficient Balance' : 'Confirm Booking'}
+              {bookingLoading
+                ? 'Booking...'
+                : totalBookingCost > balance
+                  ? 'Insufficient Balance'
+                  : 'Confirm Booking'}
             </button>
           </div>
         )}
 
         {/* Booking message */}
         {bookingMessage && (
-          <div className={bookingMessage.type === 'success' ? styles.bookingSuccess : styles.bookingError}>
+          <div
+            className={
+              bookingMessage.type === 'success' ? styles.bookingSuccess : styles.bookingError
+            }
+          >
             {bookingMessage.text}
           </div>
         )}

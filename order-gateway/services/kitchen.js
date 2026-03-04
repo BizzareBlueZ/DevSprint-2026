@@ -9,10 +9,10 @@ function createKitchenSimulator(pool, NOTIFICATION_HUB_URL) {
   async function simulateKitchen(order) {
     const notify = async status => {
       try {
-        await pool.query("UPDATE orders.orders SET status = $1, updated_at = NOW() WHERE order_id = $2", [
-          status,
-          order.orderId,
-        ])
+        await pool.query(
+          'UPDATE orders.orders SET status = $1, updated_at = NOW() WHERE order_id = $2',
+          [status, order.orderId]
+        )
         await axios
           .post(`${NOTIFICATION_HUB_URL}/notify`, {
             orderId: order.orderId,

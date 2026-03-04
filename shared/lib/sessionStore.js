@@ -12,7 +12,7 @@ const SESSION_TTL = parseInt(process.env.SESSION_TTL) || 86400 // 24 hours
  */
 function createSessionStore(redisClient) {
   const PREFIX = 'session:'
-  
+
   return {
     /**
      * Store a session
@@ -84,7 +84,7 @@ function createSessionStore(redisClient) {
  */
 function createTokenBlacklist(redisClient) {
   const PREFIX = 'blacklist:'
-  
+
   return {
     /**
      * Add token to blacklist

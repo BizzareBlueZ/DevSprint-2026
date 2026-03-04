@@ -7,7 +7,13 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 
 const JWT_SECRET = 'test-secret'
-const TEST_STUDENT = { studentId: '230042135', email: '230042135@iut-dhaka.edu', name: 'Test User', department: 'CSE', year: 3 }
+const TEST_STUDENT = {
+  studentId: '230042135',
+  email: '230042135@iut-dhaka.edu',
+  name: 'Test User',
+  department: 'CSE',
+  year: 3,
+}
 
 function createToken(payload = TEST_STUDENT) {
   return jwt.sign(payload, JWT_SECRET)
@@ -104,7 +110,7 @@ describe('Order Gateway — Validation integration', () => {
 })
 
 describe('Order Gateway — Token price calculations', () => {
-  const TOKEN_PRICE = { dinner: 120.00, iftar: 100.00 }
+  const TOKEN_PRICE = { dinner: 120.0, iftar: 100.0 }
 
   it('calculates total cost for multiple dinner tokens', () => {
     const tokens = [
@@ -165,7 +171,10 @@ describe('Order Gateway — Latency window logic', () => {
 
   it('returns 0 for empty window', () => {
     const recent = []
-    const avg = recent.length === 0 ? 0 : Math.round(recent.reduce((s, e) => s + e.latencyMs, 0) / recent.length)
+    const avg =
+      recent.length === 0
+        ? 0
+        : Math.round(recent.reduce((s, e) => s + e.latencyMs, 0) / recent.length)
     expect(avg).toBe(0)
   })
 
@@ -207,14 +216,19 @@ describe('Order Gateway — Wallet top-up validation', () => {
   })
 
   it('calculates new balance after top-up', () => {
-    const currentBalance = 380.50
-    const topUpAmount = 500.00
+    const currentBalance = 380.5
+    const topUpAmount = 500.0
     const newBalance = parseFloat((currentBalance + topUpAmount).toFixed(2))
-    expect(newBalance).toBe(880.50)
+    expect(newBalance).toBe(880.5)
   })
 
   it('formats method labels correctly', () => {
-    const methodLabels = { bkash: 'bKash Top-up', nagad: 'Nagad Top-up', rocket: 'Rocket Top-up', bank: 'Bank Transfer' }
+    const methodLabels = {
+      bkash: 'bKash Top-up',
+      nagad: 'Nagad Top-up',
+      rocket: 'Rocket Top-up',
+      bank: 'Bank Transfer',
+    }
     expect(methodLabels['bkash']).toBe('bKash Top-up')
     expect(methodLabels['nagad']).toBe('Nagad Top-up')
     expect(methodLabels['unknown']).toBeUndefined()

@@ -1,48 +1,50 @@
-const express    = require('express')
-const bcrypt     = require('bcryptjs')
-const jwt        = require('jsonwebtoken')
-const cors       = require('cors')
-const rateLimit  = require('express-rate-limit')
-const webpush    = require('web-push')
+const express = require('express')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const cors = require('cors')
+const rateLimit = require('express-rate-limit')
+const webpush = require('web-push')
 require('dotenv').config()
 
 // ─── Observability ─────────────────────────────────────────────
 const { logger } = require('./lib/logger')
-const { incCounter, observeHistogram, toPrometheusFormat, toJSON, METRICS } = require('./lib/metrics')
+const {
+  incCounter,
+  observeHistogram,
+  toPrometheusFormat,
+  toJSON,
+  METRICS,
+} = require('./lib/metrics')
 const { correlationIdMiddleware } = require('./middleware/correlationId')
 
 if (!process.env.JWT_SECRET) {
-    logger.fatal('FATAL: JWT_SECRET environment variable is not set. Refusing to start.')
-    process.exit(1)
+  logger.fatal('FATAL: JWT_SECRET environment variable is not set. Refusing to start.')
+  process.exit(1)
 }
 const JWT_SECRET = process.env.JWT_SECRET
 
 // ─── Web Push VAPID Configuration ─────────────────────────────
 if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    logger.fatal('FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.')
-    process.exit(1)
+  logger.fatal(
+    'FATAL: VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables are not set. Refusing to start.'
+  )
+  process.exit(1)
 }
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
 
-webpush.setVapidDetails(
-  'mailto:admin@iut-cafeteria.app',
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
-)
+webpush.setVapidDetails('mailto:admin@iut-cafeteria.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
 const pool = require('./db')
-const app  = express()
+const app = express()
 
 // ─── Middleware ────────────────────────────────────────────────
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:80',
-    'http://localhost',
-  ],
-  credentials: true,
-}))
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'],
+    credentials: true,
+  })
+)
 app.use(express.json())
 
 // ─── Observability Middleware ──────────────────────────────────
@@ -55,8 +57,8 @@ chaosRoute(app)
 // ─── Rate Limiter (bonus requirement: 3 attempts per minute per student) ──
 const loginLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60_000, // 1 minute
-  max:      parseInt(process.env.RATE_LIMIT_MAX)        || 3,
-  keyGenerator: (req) => req.body?.email || req.ip,
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 3,
+  keyGenerator: req => req.body?.email || req.ip,
   message: { message: 'Too many login attempts. Please wait 1 minute and try again.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -64,10 +66,10 @@ const loginLimiter = rateLimit({
 
 // ─── Metrics (in-memory) ───────────────────────────────────────
 const metrics = {
-  totalLogins:   0,
-  failedLogins:  0,
-  totalLatency:  0,
-  requestCount:  0,
+  totalLogins: 0,
+  failedLogins: 0,
+  totalLatency: 0,
+  requestCount: 0,
 }
 
 // ─── JWT Auth Middleware ───────────────────────────────────────
@@ -112,14 +114,14 @@ app.post('/login', loginLimiter, async (req, res) => {
 
   // Accept both formats: "230042135" or "230042135@iut-dhaka.edu"
   const normalizedEmail = email.includes('@')
-      ? email.toLowerCase().trim()
-      : `${email.trim()}@iut-dhaka.edu`
+    ? email.toLowerCase().trim()
+    : `${email.trim()}@iut-dhaka.edu`
 
   try {
     // ── Look up student ──
     const result = await pool.query(
-        'SELECT id, student_id, email, password_hash, name, department, year, is_active FROM identity.students WHERE email = $1',
-        [normalizedEmail]
+      'SELECT id, student_id, email, password_hash, name, department, year, is_active FROM identity.students WHERE email = $1',
+      [normalizedEmail]
     )
 
     const student = result.rows[0]
@@ -130,7 +132,9 @@ app.post('/login', loginLimiter, async (req, res) => {
     }
 
     if (!student.is_active) {
-      return res.status(403).json({ message: 'Your account has been deactivated. Contact the registrar.' })
+      return res
+        .status(403)
+        .json({ message: 'Your account has been deactivated. Contact the registrar.' })
     }
 
     // ── Verify password ──
@@ -143,11 +147,11 @@ app.post('/login', loginLimiter, async (req, res) => {
 
     // ── Issue JWT ──
     const payload = {
-      studentId:  student.student_id,
-      email:      student.email,
-      name:       student.name,
+      studentId: student.student_id,
+      email: student.email,
+      name: student.name,
       department: student.department,
-      year:       student.year,
+      year: student.year,
     }
 
     const token = jwt.sign(payload, JWT_SECRET, {
@@ -171,7 +175,6 @@ app.post('/login', loginLimiter, async (req, res) => {
     return res.status(200).json({
       user: payload,
     })
-
   } catch (err) {
     logger.error({ correlationId: req.correlationId, error: err.message }, 'Login error')
     return res.status(500).json({ message: 'Internal server error.' })
@@ -205,15 +208,17 @@ app.post('/register', async (req, res) => {
   if (!/[0-9]/.test(password)) {
     return res.status(400).json({ message: 'Password must contain at least one digit.' })
   }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-    return res.status(400).json({ message: 'Password must contain at least one special character (!@#$%^&* etc.).' })
+  if (!/[^a-zA-Z0-9\s]/.test(password)) {
+    return res
+      .status(400)
+      .json({ message: 'Password must contain at least one special character (!@#$%^&* etc.).' })
   }
 
   try {
     // Check if already exists
     const existing = await pool.query(
-        'SELECT id FROM identity.students WHERE email = $1 OR student_id = $2',
-        [email.toLowerCase(), studentId]
+      'SELECT id FROM identity.students WHERE email = $1 OR student_id = $2',
+      [email.toLowerCase(), studentId]
     )
 
     if (existing.rows.length > 0) {
@@ -225,16 +230,15 @@ app.post('/register', async (req, res) => {
 
     // Insert
     await pool.query(
-        `INSERT INTO identity.students (student_id, email, password_hash, name, department, year)
+      `INSERT INTO identity.students (student_id, email, password_hash, name, department, year)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [studentId, email.toLowerCase(), passwordHash, name, department, parseInt(year)]
+      [studentId, email.toLowerCase(), passwordHash, name, department, parseInt(year)]
     )
 
     return res.status(201).json({
       message: 'Registration successful.',
       user: { studentId, email, name, department, year },
     })
-
   } catch (err) {
     console.error('Register error:', err)
     return res.status(500).json({ message: 'Internal server error.' })
@@ -263,18 +267,18 @@ app.post('/verify', (req, res) => {
   }
 })
 
-
 /**
  * POST /admin/login
  * Authenticates admin users against the admins table
  */
 app.post('/admin/login', async (req, res) => {
   const { username, password } = req.body
-  if (!username || !password) return res.status(400).json({ message: 'Username and password are required.' })
+  if (!username || !password)
+    return res.status(400).json({ message: 'Username and password are required.' })
   try {
     const result = await pool.query(
-        'SELECT id, username, email, password_hash, full_name, role, is_active FROM identity.admins WHERE username = $1',
-        [username.toLowerCase().trim()]
+      'SELECT id, username, email, password_hash, full_name, role, is_active FROM identity.admins WHERE username = $1',
+      [username.toLowerCase().trim()]
     )
     const admin = result.rows[0]
     if (!admin) return res.status(401).json({ message: 'Invalid credentials.' })
@@ -282,7 +286,13 @@ app.post('/admin/login', async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, admin.password_hash)
     if (!passwordMatch) return res.status(401).json({ message: 'Invalid credentials.' })
     await pool.query('UPDATE identity.admins SET last_login_at = NOW() WHERE id = $1', [admin.id])
-    const payload = { adminId: admin.id, username: admin.username, fullName: admin.full_name, role: admin.role, isAdmin: true }
+    const payload = {
+      adminId: admin.id,
+      username: admin.username,
+      fullName: admin.full_name,
+      role: admin.role,
+      isAdmin: true,
+    }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
     // Set JWT as httpOnly cookie (frontend expects this)
     res.cookie('token', token, {
@@ -304,7 +314,12 @@ app.post('/admin/login', async (req, res) => {
  * Clears the httpOnly JWT cookie
  */
 app.post('/logout', (req, res) => {
-  res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/', secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true' })
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true',
+  })
   return res.status(200).json({ message: 'Logged out successfully.' })
 })
 
@@ -346,27 +361,33 @@ app.get('/admin/users/:studentId', async (req, res) => {
     )
     if (userResult.rows.length === 0) return res.status(404).json({ message: 'User not found.' })
 
-    const ordersResult = await pool.query(`
+    const ordersResult = await pool.query(
+      `
       SELECT o.order_id, o.status, o.amount, o.created_at, m.name as item_name
       FROM orders.orders o
       JOIN public.menu_items m ON m.id = o.item_id
       WHERE o.student_id = $1
       ORDER BY o.created_at DESC
       LIMIT 50
-    `, [studentId])
+    `,
+      [studentId]
+    )
 
-    const transactionsResult = await pool.query(`
+    const transactionsResult = await pool.query(
+      `
       SELECT id, type, amount, balance_after, description, created_at
       FROM public.transactions
       WHERE student_id = $1
       ORDER BY created_at DESC
       LIMIT 50
-    `, [studentId])
+    `,
+      [studentId]
+    )
 
     res.json({
       user: userResult.rows[0],
       orders: ordersResult.rows,
-      transactions: transactionsResult.rows
+      transactions: transactionsResult.rows,
     })
   } catch (err) {
     console.error('Fetch user detail error:', err)
@@ -390,7 +411,10 @@ app.put('/admin/users/:studentId/status', async (req, res) => {
       [is_active, studentId]
     )
     if (result.rows.length === 0) return res.status(404).json({ message: 'User not found.' })
-    res.json({ message: is_active ? 'Account reactivated.' : 'Account suspended.', user: result.rows[0] })
+    res.json({
+      message: is_active ? 'Account reactivated.' : 'Account suspended.',
+      user: result.rows[0],
+    })
   } catch (err) {
     console.error('Update user status error:', err)
     res.status(500).json({ message: 'Failed to update user status.' })
@@ -406,11 +430,11 @@ app.put('/admin/users/:studentId/status', async (req, res) => {
 app.post('/push/subscribe', requireAuth, async (req, res) => {
   const { subscription } = req.body
   const { studentId } = req.user
-  
+
   if (!subscription || !subscription.endpoint || !subscription.keys) {
     return res.status(400).json({ message: 'Invalid subscription object.' })
   }
-  
+
   try {
     await pool.query(
       `INSERT INTO identity.push_subscriptions (student_id, endpoint, p256dh, auth)
@@ -418,7 +442,7 @@ app.post('/push/subscribe', requireAuth, async (req, res) => {
        ON CONFLICT (student_id, endpoint) DO UPDATE SET p256dh = $3, auth = $4`,
       [studentId, subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth]
     )
-    
+
     res.json({ message: 'Push subscription saved.' })
   } catch (err) {
     console.error('Push subscribe error:', err)
@@ -432,13 +456,10 @@ app.post('/push/subscribe', requireAuth, async (req, res) => {
  */
 app.delete('/push/unsubscribe', requireAuth, async (req, res) => {
   const { studentId } = req.user
-  
+
   try {
-    await pool.query(
-      `DELETE FROM identity.push_subscriptions WHERE student_id = $1`,
-      [studentId]
-    )
-    
+    await pool.query(`DELETE FROM identity.push_subscriptions WHERE student_id = $1`, [studentId])
+
     res.json({ message: 'Push subscription removed.' })
   } catch (err) {
     console.error('Push unsubscribe error:', err)
@@ -452,13 +473,13 @@ app.delete('/push/unsubscribe', requireAuth, async (req, res) => {
  */
 app.get('/push/status', requireAuth, async (req, res) => {
   const { studentId } = req.user
-  
+
   try {
     const result = await pool.query(
       `SELECT COUNT(*) as count FROM identity.push_subscriptions WHERE student_id = $1`,
       [studentId]
     )
-    
+
     res.json({ subscribed: parseInt(result.rows[0].count) > 0 })
   } catch (err) {
     res.status(500).json({ message: 'Failed to check push status.' })
@@ -479,36 +500,36 @@ app.get('/push/vapid-key', (req, res) => {
  */
 app.post('/push/send', async (req, res) => {
   const { studentId, title, body, data } = req.body
-  
+
   if (!studentId || !title) {
     return res.status(400).json({ message: 'studentId and title are required.' })
   }
-  
+
   try {
     const result = await pool.query(
       'SELECT endpoint, p256dh, auth FROM identity.push_subscriptions WHERE student_id = $1',
       [studentId]
     )
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'No push subscription found for this student.' })
     }
-    
+
     const payload = JSON.stringify({
       title,
       body: body || '',
       icon: '/iut-logo.png',
       badge: '/badge.png',
-      data: data || {}
+      data: data || {},
     })
-    
-    const sendPromises = result.rows.map(async (sub) => {
+
+    const sendPromises = result.rows.map(async sub => {
       const subscription = {
         endpoint: sub.endpoint,
         keys: {
           p256dh: sub.p256dh,
-          auth: sub.auth
-        }
+          auth: sub.auth,
+        },
       }
       try {
         await webpush.sendNotification(subscription, payload)
@@ -516,19 +537,21 @@ app.post('/push/send', async (req, res) => {
       } catch (err) {
         // Remove invalid subscriptions
         if (err.statusCode === 410 || err.statusCode === 404) {
-          await pool.query('DELETE FROM identity.push_subscriptions WHERE endpoint = $1', [sub.endpoint])
+          await pool.query('DELETE FROM identity.push_subscriptions WHERE endpoint = $1', [
+            sub.endpoint,
+          ])
         }
         return { success: false, error: err.message }
       }
     })
-    
+
     const results = await Promise.all(sendPromises)
     const successCount = results.filter(r => r.success).length
-    
-    res.json({ 
+
+    res.json({
       message: `Sent to ${successCount}/${results.length} subscriptions`,
       sent: successCount,
-      total: results.length
+      total: results.length,
     })
   } catch (err) {
     console.error('Push notification error:', err)
@@ -544,17 +567,17 @@ app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1')
     res.status(200).json({
-      status:    'healthy',
-      service:   'identity-provider',
-      database:  'connected',
+      status: 'healthy',
+      service: 'identity-provider',
+      database: 'connected',
       timestamp: new Date().toISOString(),
     })
   } catch (err) {
     res.status(503).json({
-      status:    'unhealthy',
-      service:   'identity-provider',
-      database:  'disconnected',
-      reason:    err.message,
+      status: 'unhealthy',
+      service: 'identity-provider',
+      database: 'disconnected',
+      reason: err.message,
       timestamp: new Date().toISOString(),
     })
   }

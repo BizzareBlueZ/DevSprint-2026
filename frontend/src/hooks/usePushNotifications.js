@@ -3,14 +3,12 @@ import axios from 'axios'
 
 // Convert URL-safe base64 to Uint8Array
 function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
-  
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+
   const rawData = window.atob(base64)
   const outputArray = new Uint8Array(rawData.length)
-  
+
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i)
   }
@@ -30,7 +28,7 @@ export function usePushNotifications() {
   useEffect(() => {
     const supported = 'serviceWorker' in navigator && 'PushManager' in window
     setIsSupported(supported)
-    
+
     if (supported) {
       setPermission(Notification.permission)
       registerServiceWorker()
@@ -43,18 +41,18 @@ export function usePushNotifications() {
   const registerServiceWorker = async () => {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+        scope: '/',
       })
       console.log('Service Worker registered:', reg.scope)
       setRegistration(reg)
-      
+
       // Check for existing subscription
       const existingSub = await reg.pushManager.getSubscription()
       if (existingSub) {
         setSubscription(existingSub)
         setIsSubscribed(true)
       }
-      
+
       setLoading(false)
     } catch (err) {
       console.error('SW registration failed:', err)
@@ -69,43 +67,47 @@ export function usePushNotifications() {
       setError('Service worker not registered')
       return false
     }
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       // Request notification permission
       const perm = await Notification.requestPermission()
       setPermission(perm)
-      
+
       if (perm !== 'granted') {
         setError('Notification permission denied')
         setLoading(false)
         return false
       }
-      
+
       // Get VAPID public key from server
       const { data: vapidData } = await axios.get('/api/auth/push/vapid-key')
       const applicationServerKey = urlBase64ToUint8Array(vapidData.publicKey)
-      
+
       // Create push subscription
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey
+        applicationServerKey,
       })
-      
+
       // Send subscription to server (backend expects { subscription: { endpoint, keys: { p256dh, auth } } })
       const subJson = sub.toJSON()
-      await axios.post('/api/auth/push/subscribe', {
-        subscription: {
-          endpoint: subJson.endpoint,
-          keys: {
-            p256dh: subJson.keys.p256dh,
-            auth: subJson.keys.auth
-          }
-        }
-      }, { withCredentials: true })
-      
+      await axios.post(
+        '/api/auth/push/subscribe',
+        {
+          subscription: {
+            endpoint: subJson.endpoint,
+            keys: {
+              p256dh: subJson.keys.p256dh,
+              auth: subJson.keys.auth,
+            },
+          },
+        },
+        { withCredentials: true }
+      )
+
       setSubscription(sub)
       setIsSubscribed(true)
       setLoading(false)
@@ -123,19 +125,19 @@ export function usePushNotifications() {
     if (!subscription) {
       return true
     }
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       // Unsubscribe from push manager
       await subscription.unsubscribe()
-      
+
       // Notify server
       await axios.delete('/api/auth/push/unsubscribe', {
-        data: { endpoint: subscription.endpoint }
+        data: { endpoint: subscription.endpoint },
       })
-      
+
       setSubscription(null)
       setIsSubscribed(false)
       setLoading(false)
@@ -165,6 +167,6 @@ export function usePushNotifications() {
     error,
     subscribe,
     unsubscribe,
-    toggle
+    toggle,
   }
 }

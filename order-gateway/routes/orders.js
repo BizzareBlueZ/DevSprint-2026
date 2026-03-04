@@ -12,7 +12,10 @@ const { getCorrelationHeaders } = require('../middleware/correlationId')
 const { logger } = require('../lib/logger')
 const { incCounter, observeHistogram, recordLatency, METRICS } = require('../lib/metrics')
 
-module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, simulateKitchen, STOCK_SERVICE_URL }) {
+module.exports = function createOrderRoutes(
+  pool,
+  { redisClient, rabbitChannel, simulateKitchen, STOCK_SERVICE_URL }
+) {
   // POST /orders
   router.post('/', requireAuth, async (req, res) => {
     const start = Date.now()
@@ -41,7 +44,10 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
           })
         }
       } catch (err) {
-        logger.error({ correlationId: req.correlationId, error: err.message }, 'Idempotency lookup error')
+        logger.error(
+          { correlationId: req.correlationId, error: err.message },
+          'Idempotency lookup error'
+        )
       }
     }
 
@@ -97,7 +103,9 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
           { timeout: 3000, headers: getCorrelationHeaders(req) }
         )
       } catch (err) {
-        await pool.query("UPDATE orders.orders SET status = 'FAILED' WHERE order_id = $1", [orderId])
+        await pool.query("UPDATE orders.orders SET status = 'FAILED' WHERE order_id = $1", [
+          orderId,
+        ])
         await pool.query(
           `INSERT INTO public.transactions (student_id, type, amount, balance_after, description, order_id)
            VALUES ($1, 'credit', $2, $3, 'Refund: stock unavailable', $4)`,
@@ -112,9 +120,18 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
         [orderId]
       )
 
-      const orderMsg = { orderId, studentId, itemId, itemName: item.name, type, timestamp: new Date().toISOString() }
+      const orderMsg = {
+        orderId,
+        studentId,
+        itemId,
+        itemName: item.name,
+        type,
+        timestamp: new Date().toISOString(),
+      }
       if (rabbitChannel) {
-        rabbitChannel.sendToQueue('orders', Buffer.from(JSON.stringify(orderMsg)), { persistent: true })
+        rabbitChannel.sendToQueue('orders', Buffer.from(JSON.stringify(orderMsg)), {
+          persistent: true,
+        })
       } else {
         simulateKitchen(orderMsg)
       }
@@ -129,7 +146,9 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
         'Order created successfully'
       )
 
-      return res.status(202).json({ orderId, message: 'Order received! Track your status below.', item: item.name })
+      return res
+        .status(202)
+        .json({ orderId, message: 'Order received! Track your status below.', item: item.name })
     } catch (err) {
       // Handle unique constraint violation on idempotency_key
       if (err.code === '23505' && err.constraint && idempotencyKey) {
@@ -285,7 +304,7 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
       }
 
       const qrCode = result.rows[0].qr_code
-      
+
       // Generate QR code as PNG buffer
       const qrBuffer = await QRCode.toBuffer(qrCode, {
         type: 'png',
@@ -293,16 +312,19 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
         margin: 2,
         color: {
           dark: '#1a1a2e',
-          light: '#ffffff'
+          light: '#ffffff',
         },
-        errorCorrectionLevel: 'H'
+        errorCorrectionLevel: 'H',
       })
 
       res.set('Content-Type', 'image/png')
       res.set('Cache-Control', 'public, max-age=3600')
       res.send(qrBuffer)
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'QR image generation error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'QR image generation error'
+      )
       res.status(500).json({ message: 'Failed to generate QR code image.' })
     }
   })
@@ -324,7 +346,7 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
       }
 
       const qrCode = result.rows[0].qr_code
-      
+
       // Generate QR code as SVG
       const svgString = await QRCode.toString(qrCode, {
         type: 'svg',
@@ -332,16 +354,19 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
         margin: 2,
         color: {
           dark: '#1a1a2e',
-          light: '#ffffff'
+          light: '#ffffff',
         },
-        errorCorrectionLevel: 'H'
+        errorCorrectionLevel: 'H',
       })
 
       res.set('Content-Type', 'image/svg+xml')
       res.set('Cache-Control', 'public, max-age=3600')
       res.send(svgString)
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'QR SVG generation error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'QR SVG generation error'
+      )
       res.status(500).json({ message: 'Failed to generate QR code.' })
     }
   })
@@ -376,7 +401,9 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
       }
 
       if (order.status !== 'READY') {
-        return res.status(400).json({ message: `Order is not ready. Current status: ${order.status}`, order })
+        return res
+          .status(400)
+          .json({ message: `Order is not ready. Current status: ${order.status}`, order })
       }
 
       await pool.query(
@@ -385,14 +412,20 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
         [order.order_id]
       )
 
-      logger.info({ correlationId: req.correlationId, orderId: order.order_id }, 'Order picked up via QR')
+      logger.info(
+        { correlationId: req.correlationId, orderId: order.order_id },
+        'Order picked up via QR'
+      )
 
       res.json({
         message: 'Order verified! Ready for pickup.',
         order: { ...order, pickup_verified: true, status: 'PICKED_UP' },
       })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'QR verification error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'QR verification error'
+      )
       res.status(500).json({ message: 'Failed to verify QR code.' })
     }
   })

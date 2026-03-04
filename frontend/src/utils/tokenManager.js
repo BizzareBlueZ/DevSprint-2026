@@ -1,11 +1,11 @@
 /**
  * Secure Token Management - httpOnly Cookies
- * 
+ *
  * This utility handles JWT tokens using httpOnly cookies, which are:
  * - Not accessible via JavaScript (protection against XSS)
  * - Automatically sent with requests (reduces manual header management)
  * - Cleared on logout
- * 
+ *
  * NOTE: httpOnly cookies are automatically handled by axios when configured with credentialsincluded:true
  */
 
@@ -13,7 +13,7 @@ export const tokenConfig = {
   tokenKey: 'iut_token',
   userKey: 'iut_user',
   avatarKey: 'iut_avatar',
-  
+
   // Cookie options - should match backend cookie settings
   cookieOptions: {
     path: '/',
@@ -21,7 +21,7 @@ export const tokenConfig = {
     // secure: true,  // Only HTTPS
     // sameSite: 'Strict', // CSRF protection
     // maxAge: 86400000, // 24 hours in milliseconds
-  }
+  },
 }
 
 let _interceptorRegistered = false
@@ -40,8 +40,8 @@ export function enableHttpOnlyCookies(axiosInstance) {
 
   // Response interceptor to handle 401 (token expired)
   axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    response => response,
+    error => {
       if (error.response?.status === 401) {
         // Skip redirect for login/register endpoints (let the page handle the error)
         const url = error.config?.url || ''

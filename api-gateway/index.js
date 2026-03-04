@@ -14,7 +14,13 @@ require('dotenv').config()
 
 // ─── Observability ─────────────────────────────────────────────
 const { logger } = require('./lib/logger')
-const { incCounter, observeHistogram, toPrometheusFormat, toJSON, METRICS } = require('./lib/metrics')
+const {
+  incCounter,
+  observeHistogram,
+  toPrometheusFormat,
+  toJSON,
+  METRICS,
+} = require('./lib/metrics')
 const { correlationIdMiddleware } = require('./middleware/correlationId')
 const { gracefulShutdown } = require('./lib/gracefulShutdown')
 
@@ -38,15 +44,19 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 const app = express()
 
 // ─── Security Middleware ───────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: false, // Allow Swagger UI
-  crossOriginEmbedderPolicy: false,
-}))
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Allow Swagger UI
+    crossOriginEmbedderPolicy: false,
+  })
+)
 
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'],
-  credentials: true,
-}))
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'http://localhost:80', 'http://localhost'],
+    credentials: true,
+  })
+)
 
 app.use(express.json())
 app.use(correlationIdMiddleware)
@@ -56,15 +66,22 @@ app.use((req, res, next) => {
   const start = Date.now()
   res.on('finish', () => {
     const duration = Date.now() - start
-    incCounter(METRICS.HTTP_REQUESTS_TOTAL, { method: req.method, path: req.route?.path || req.path, status: res.statusCode })
-    observeHistogram(METRICS.HTTP_REQUEST_DURATION_MS, duration, { method: req.method })
-    logger.info({
-      correlationId: req.correlationId,
+    incCounter(METRICS.HTTP_REQUESTS_TOTAL, {
       method: req.method,
-      path: req.path,
+      path: req.route?.path || req.path,
       status: res.statusCode,
-      durationMs: duration,
-    }, 'Request completed')
+    })
+    observeHistogram(METRICS.HTTP_REQUEST_DURATION_MS, duration, { method: req.method })
+    logger.info(
+      {
+        correlationId: req.correlationId,
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        durationMs: duration,
+      },
+      'Request completed'
+    )
   })
   next()
 })
@@ -77,8 +94,8 @@ let redisConnected = false
 async function initRedis() {
   try {
     const Redis = require('ioredis')
-    redisClient = new Redis(REDIS_URL, { 
-      lazyConnect: true, 
+    redisClient = new Redis(REDIS_URL, {
+      lazyConnect: true,
       enableOfflineQueue: false,
       maxRetriesPerRequest: 1,
       retryStrategy: () => null, // Don't retry
@@ -86,7 +103,7 @@ async function initRedis() {
     await redisClient.connect()
     redisConnected = true
     logger.info('Connected to Redis')
-  } catch (err) { 
+  } catch (err) {
     logger.warn({ error: err.message }, 'Redis not available - using in-memory rate limiting')
     redisClient = null
     redisConnected = false
@@ -101,7 +118,7 @@ const createRateLimiter = (windowMs, max, message) => {
     message: { message },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.user?.studentId || req.ip,
+    keyGenerator: req => req.user?.studentId || req.ip,
   }
 
   // Redis store is configured later after connection
@@ -136,7 +153,7 @@ function authMiddleware(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET)
     req.user = {
       ...decoded,
-      studentId: decoded.studentId || decoded.student_id || (decoded.email?.split('@')[0]),
+      studentId: decoded.studentId || decoded.student_id || decoded.email?.split('@')[0],
     }
     // Pass user info to downstream services
     req.headers['x-user-id'] = req.user.studentId
@@ -153,9 +170,14 @@ function optionalAuth(req, res, next) {
   if (token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET)
-      req.user = { ...decoded, studentId: decoded.studentId || decoded.student_id || decoded.email?.split('@')[0] }
+      req.user = {
+        ...decoded,
+        studentId: decoded.studentId || decoded.student_id || decoded.email?.split('@')[0],
+      }
       req.headers['x-user-id'] = req.user.studentId
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   next()
 }
@@ -225,98 +247,128 @@ app.get('/metrics/prometheus', (req, res) => {
 })
 
 // ─── Auth Routes (login/register) ──────────────────────────────
-app.use('/api/auth', authLimiter, createProxyMiddleware({
-  target: SERVICES['identity-provider'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/auth': '' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/auth',
+  authLimiter,
+  createProxyMiddleware({
+    target: SERVICES['identity-provider'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/auth': '' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
 // ─── Protected Routes ──────────────────────────────────────────
 // Order Gateway
-app.use('/api/orders', authMiddleware, createProxyMiddleware({
-  target: SERVICES['order-gateway'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/orders': '/orders' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
-      proxyReq.setHeader('x-user-id', req.user?.studentId || '')
+app.use(
+  '/api/orders',
+  authMiddleware,
+  createProxyMiddleware({
+    target: SERVICES['order-gateway'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/orders': '/orders' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+        proxyReq.setHeader('x-user-id', req.user?.studentId || '')
+      },
     },
-  },
-}))
+  })
+)
 
-app.use('/api/menu', optionalAuth, createProxyMiddleware({
-  target: SERVICES['order-gateway'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/menu': '/menu' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/menu',
+  optionalAuth,
+  createProxyMiddleware({
+    target: SERVICES['order-gateway'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/menu': '/menu' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
-app.use('/api/wallet', authMiddleware, createProxyMiddleware({
-  target: SERVICES['order-gateway'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/wallet': '/wallet' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/wallet',
+  authMiddleware,
+  createProxyMiddleware({
+    target: SERVICES['order-gateway'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/wallet': '/wallet' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
-app.use('/api/cafeteria', authMiddleware, createProxyMiddleware({
-  target: SERVICES['order-gateway'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/cafeteria': '/cafeteria' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/cafeteria',
+  authMiddleware,
+  createProxyMiddleware({
+    target: SERVICES['order-gateway'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/cafeteria': '/cafeteria' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
-app.use('/api/reviews', authMiddleware, createProxyMiddleware({
-  target: SERVICES['order-gateway'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/reviews': '/reviews' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/reviews',
+  authMiddleware,
+  createProxyMiddleware({
+    target: SERVICES['order-gateway'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/reviews': '/reviews' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
 // Admin routes (no additional auth - handled by downstream)
-app.use('/api/admin', createProxyMiddleware({
-  target: SERVICES['order-gateway'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/admin': '/admin' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/admin',
+  createProxyMiddleware({
+    target: SERVICES['order-gateway'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/admin': '/admin' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
 // Stock Service (internal)
-app.use('/api/stock', createProxyMiddleware({
-  target: SERVICES['stock-service'],
-  changeOrigin: true,
-  pathRewrite: { '^/api/stock': '/stock' },
-  on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader('x-correlation-id', req.correlationId)
+app.use(
+  '/api/stock',
+  createProxyMiddleware({
+    target: SERVICES['stock-service'],
+    changeOrigin: true,
+    pathRewrite: { '^/api/stock': '/stock' },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        proxyReq.setHeader('x-correlation-id', req.correlationId)
+      },
     },
-  },
-}))
+  })
+)
 
 // ─── 404 Handler ───────────────────────────────────────────────
 app.use((req, res) => {
@@ -325,7 +377,10 @@ app.use((req, res) => {
 
 // ─── Error Handler ─────────────────────────────────────────────
 app.use((err, req, res, _next) => {
-  logger.error({ correlationId: req.correlationId, error: err.message, stack: err.stack }, 'Unhandled error')
+  logger.error(
+    { correlationId: req.correlationId, error: err.message, stack: err.stack },
+    'Unhandled error'
+  )
   res.status(500).json({ message: 'Internal server error.' })
 })
 
@@ -335,7 +390,7 @@ const PORT = process.env.PORT || 8080
 async function start() {
   // Try to connect to Redis (optional)
   await initRedis()
-  
+
   const server = app.listen(PORT, () => {
     logger.info({ port: PORT, redis: redisConnected }, 'API Gateway started')
   })

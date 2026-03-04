@@ -27,9 +27,7 @@ function validateLoginRequest(body = {}) {
  */
 function normalizeEmail(email) {
   if (typeof email !== 'string') return ''
-  return email.includes('@')
-    ? email.toLowerCase().trim()
-    : `${email.trim()}@iut-dhaka.edu`
+  return email.includes('@') ? email.toLowerCase().trim() : `${email.trim()}@iut-dhaka.edu`
 }
 
 /**

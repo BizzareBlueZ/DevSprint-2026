@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { parseStudentId, getDepartmentInfo, getYearInfo, formatStudentInfo } from '../utils/studentIdParser'
+import {
+  parseStudentId,
+  getDepartmentInfo,
+  getYearInfo,
+  formatStudentInfo,
+} from '../utils/studentIdParser'
 
 // ─── parseStudentId ────────────────────────────────────────────
 

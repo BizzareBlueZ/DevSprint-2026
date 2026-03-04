@@ -6,11 +6,7 @@
 const { v4: uuidv4 } = require('uuid')
 
 // Header names for correlation ID propagation
-const CORRELATION_HEADERS = [
-  'x-correlation-id',
-  'x-request-id',
-  'x-trace-id',
-]
+const CORRELATION_HEADERS = ['x-correlation-id', 'x-request-id', 'x-trace-id']
 
 /**
  * Middleware that extracts or generates a correlation ID for each request

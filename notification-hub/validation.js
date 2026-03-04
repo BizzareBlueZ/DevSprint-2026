@@ -30,7 +30,11 @@ function validateJoinOrder(payload) {
   if (!payload || typeof payload !== 'object') {
     return { valid: false, error: 'Payload must be an object.' }
   }
-  if (!payload.orderId || typeof payload.orderId !== 'string' || payload.orderId.trim().length === 0) {
+  if (
+    !payload.orderId ||
+    typeof payload.orderId !== 'string' ||
+    payload.orderId.trim().length === 0
+  ) {
     return { valid: false, error: 'orderId is required.' }
   }
   return { valid: true }
@@ -45,7 +49,11 @@ function validateJoinStudent(payload) {
   if (!payload || typeof payload !== 'object') {
     return { valid: false, error: 'Payload must be an object.' }
   }
-  if (!payload.studentId || typeof payload.studentId !== 'string' || payload.studentId.trim().length === 0) {
+  if (
+    !payload.studentId ||
+    typeof payload.studentId !== 'string' ||
+    payload.studentId.trim().length === 0
+  ) {
     return { valid: false, error: 'studentId is required.' }
   }
   return { valid: true }

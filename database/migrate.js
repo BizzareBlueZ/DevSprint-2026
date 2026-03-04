@@ -20,10 +20,10 @@ const path = require('path')
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations')
 
 const pool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
-  port:     parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME     || 'cafeteria',
-  user:     process.env.DB_USER     || 'admin',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT) || 5432,
+  database: process.env.DB_NAME || 'cafeteria',
+  user: process.env.DB_USER || 'admin',
   password: process.env.DB_PASSWORD || 'secret123',
 })
 
@@ -42,7 +42,8 @@ function getMigrationFiles() {
     console.error(`[ERROR] Migrations directory not found: ${MIGRATIONS_DIR}`)
     process.exit(1)
   }
-  return fs.readdirSync(MIGRATIONS_DIR)
+  return fs
+    .readdirSync(MIGRATIONS_DIR)
     .filter(f => f.endsWith('.sql'))
     .sort()
 }
@@ -60,10 +61,7 @@ async function applyMigration(client, filename) {
 
   console.log(`[MIGRATE] Applying: ${filename}`)
   await client.query(sql)
-  await client.query(
-    'INSERT INTO public.schema_migrations (filename) VALUES ($1)',
-    [filename]
-  )
+  await client.query('INSERT INTO public.schema_migrations (filename) VALUES ($1)', [filename])
   console.log(`[MIGRATE] Applied:  ${filename}`)
 }
 
@@ -79,15 +77,15 @@ async function cmdStatus() {
 
     for (const f of files) {
       const appliedAt = applied.get(f)
-      const status = appliedAt
-        ? `[applied] ${appliedAt.toISOString()}`
-        : '[pending]'
+      const status = appliedAt ? `[applied] ${appliedAt.toISOString()}` : '[pending]'
       console.log(`  ${status}  ${f}`)
     }
 
     const pendingCount = files.filter(f => !applied.has(f)).length
     console.log('─'.repeat(60))
-    console.log(`  ${files.length} total, ${files.length - pendingCount} applied, ${pendingCount} pending\n`)
+    console.log(
+      `  ${files.length} total, ${files.length - pendingCount} applied, ${pendingCount} pending\n`
+    )
   } finally {
     client.release()
   }
@@ -138,10 +136,7 @@ async function cmdRedo() {
     const last = appliedFiles[appliedFiles.length - 1]
     console.log(`[MIGRATE] Re-applying last migration: ${last}`)
 
-    await client.query(
-      'DELETE FROM public.schema_migrations WHERE filename = $1',
-      [last]
-    )
+    await client.query('DELETE FROM public.schema_migrations WHERE filename = $1', [last])
     await applyMigration(client, last)
     console.log(`[MIGRATE] Redo complete.`)
   } finally {

@@ -16,14 +16,14 @@ function gracefulShutdown(server, options = {}) {
   const { logger = console, onShutdown } = options
   let isShuttingDown = false
 
-  const shutdown = async (signal) => {
+  const shutdown = async signal => {
     if (isShuttingDown) return
     isShuttingDown = true
 
     logger.info({ signal }, 'Shutdown signal received, draining connections...')
 
     // Stop accepting new connections
-    server.close(async (err) => {
+    server.close(async err => {
       if (err) {
         logger.error({ error: err.message }, 'Error closing server')
       }
@@ -53,12 +53,12 @@ function gracefulShutdown(server, options = {}) {
   process.on('SIGINT', () => shutdown('SIGINT'))
 
   // Handle uncaught exceptions
-  process.on('uncaughtException', (err) => {
+  process.on('uncaughtException', err => {
     logger.fatal({ error: err.message, stack: err.stack }, 'Uncaught exception')
     shutdown('uncaughtException')
   })
 
-  process.on('unhandledRejection', (reason) => {
+  process.on('unhandledRejection', reason => {
     logger.fatal({ reason: String(reason) }, 'Unhandled rejection')
     shutdown('unhandledRejection')
   })

@@ -106,7 +106,10 @@ module.exports = function createCafeteriaRoutes(pool) {
       )
       res.json({ purchases: result.rows })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Purchases fetch error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Purchases fetch error'
+      )
       res.status(500).json({ message: 'Failed to fetch purchases.' })
     }
   })

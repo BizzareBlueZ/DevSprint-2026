@@ -1,5 +1,4 @@
 services:
-
   # ── Infrastructure ──────────────────────────────────────────
 
   postgres:
@@ -14,7 +13,7 @@ services:
     networks:
       - cafeteria-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d cafeteria"]
+      test: ['CMD-SHELL', 'pg_isready -U admin -d cafeteria']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +23,7 @@ services:
     networks:
       - cafeteria-net
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -32,7 +31,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
-      - "15672:15672"   # Web UI: http://localhost:15672 (credentials in .env)
+      - '15672:15672' # Web UI: http://localhost:15672 (credentials in .env)
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -42,7 +41,7 @@ services:
     networks:
       - cafeteria-net
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,7 +55,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE}
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: ${PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED}
     ports:
-      - "5050:80"
+      - '5050:80'
     volumes:
       - pgadmin_data:/var/lib/pgadmin
       - ./database/pgadmin-servers.json:/pgadmin4/servers.json
@@ -71,7 +70,7 @@ services:
   identity-provider:
     build: ./identity-provider
     ports:
-      - "${IDENTITY_PROVIDER_PORT}:3001"
+      - '${IDENTITY_PROVIDER_PORT}:3001'
     environment:
       PORT: 3001
       NODE_ENV: ${NODE_ENV:-production}
@@ -94,7 +93,7 @@ services:
   order-gateway:
     build: ./order-gateway
     ports:
-      - "${ORDER_GATEWAY_PORT}:3000"
+      - '${ORDER_GATEWAY_PORT}:3000'
     environment:
       PORT: 3000
       JWT_SECRET: ${JWT_SECRET}
@@ -120,7 +119,7 @@ services:
   stock-service:
     build: ./stock-service
     ports:
-      - "${STOCK_SERVICE_PORT}:3002"
+      - '${STOCK_SERVICE_PORT}:3002'
     environment:
       PORT: 3002
       JWT_SECRET: ${JWT_SECRET}
@@ -141,7 +140,7 @@ services:
   kitchen-queue:
     build: ./kitchen-queue
     ports:
-      - "${KITCHEN_QUEUE_PORT}:3003"
+      - '${KITCHEN_QUEUE_PORT}:3003'
     environment:
       PORT: 3003
       JWT_SECRET: ${JWT_SECRET}
@@ -163,7 +162,7 @@ services:
   notification-hub:
     build: ./notification-hub
     ports:
-      - "${NOTIFICATION_HUB_PORT}:3004"
+      - '${NOTIFICATION_HUB_PORT}:3004'
     environment:
       PORT: 3004
       JWT_SECRET: ${JWT_SECRET}
@@ -180,7 +179,7 @@ services:
   api-gateway:
     build: ./api-gateway
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       PORT: 8080
       NODE_ENV: ${NODE_ENV:-production}
@@ -210,8 +209,8 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     environment:
       ENABLE_HTTPS: ${ENABLE_HTTPS:-false}
       SSL_CERT_PATH: ${SSL_CERT_PATH:-/etc/nginx/ssl/cert.pem}

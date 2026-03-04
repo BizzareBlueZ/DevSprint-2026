@@ -17,7 +17,7 @@ export function ToastProvider({ children }) {
     return id
   }, [])
 
-  const removeToast = useCallback((id) => {
+  const removeToast = useCallback(id => {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
@@ -38,7 +38,11 @@ export function ToastProvider({ children }) {
               className="toast-slide-in"
             >
               <div style={toastIconStyle}>
-                {toast.type === 'success' ? '\uD83C\uDF7D\uFE0F' : toast.type === 'error' ? '\u26A0\uFE0F' : '\uD83D\uDD14'}
+                {toast.type === 'success'
+                  ? '\uD83C\uDF7D\uFE0F'
+                  : toast.type === 'error'
+                    ? '\u26A0\uFE0F'
+                    : '\uD83D\uDD14'}
               </div>
               <div style={toastBodyStyle}>
                 {toast.title && <div style={toastTitleStyle}>{toast.title}</div>}
@@ -46,7 +50,10 @@ export function ToastProvider({ children }) {
               </div>
               <button
                 style={closeBtnStyle}
-                onClick={(e) => { e.stopPropagation(); removeToast(toast.id) }}
+                onClick={e => {
+                  e.stopPropagation()
+                  removeToast(toast.id)
+                }}
               >
                 \u00D7
               </button>

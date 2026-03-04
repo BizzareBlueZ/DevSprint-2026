@@ -22,7 +22,10 @@ function requireAuth(req, res, next) {
   }
 
   if (!token) {
-    logger.warn({ correlationId: req.correlationId, event: 'auth_failed', reason: 'no_token' }, 'No token provided')
+    logger.warn(
+      { correlationId: req.correlationId, event: 'auth_failed', reason: 'no_token' },
+      'No token provided'
+    )
     return res.status(401).json({ message: 'No token provided.' })
   }
 
@@ -53,7 +56,12 @@ function requireAuth(req, res, next) {
     next()
   } catch (err) {
     logger.warn(
-      { correlationId: req.correlationId, event: 'auth_failed', reason: 'invalid_token', error: err.message },
+      {
+        correlationId: req.correlationId,
+        event: 'auth_failed',
+        reason: 'invalid_token',
+        error: err.message,
+      },
       'Invalid or expired token'
     )
     return res.status(401).json({ message: 'Invalid or expired token.' })

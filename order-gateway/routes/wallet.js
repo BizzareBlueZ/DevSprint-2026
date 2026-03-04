@@ -37,7 +37,10 @@ module.exports = function createWalletRoutes(pool) {
       )
       res.json({ transactions: result.rows })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Transactions fetch error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Transactions fetch error'
+      )
       res.status(500).json({ message: 'Failed to fetch transactions.' })
     }
   })
@@ -89,7 +92,9 @@ module.exports = function createWalletRoutes(pool) {
         'Wallet top-up successful'
       )
 
-      return res.status(200).json({ message: 'Wallet topped up successfully.', amount: amt, newBalance, method })
+      return res
+        .status(200)
+        .json({ message: 'Wallet topped up successfully.', amount: amt, newBalance, method })
     } catch (err) {
       logger.error({ correlationId: req.correlationId, error: err.message }, 'Top-up error')
       return res.status(500).json({ message: 'Top-up failed. Please try again.' })
@@ -110,7 +115,10 @@ module.exports = function createWalletRoutes(pool) {
       const available = Math.max(0, EMERGENCY_LIMIT - outstanding)
       res.json({ outstanding, available, limit: EMERGENCY_LIMIT })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Emergency status error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Emergency status error'
+      )
       res.status(500).json({ message: 'Failed to check emergency balance.' })
     }
   })
@@ -189,7 +197,10 @@ module.exports = function createWalletRoutes(pool) {
         limit: EMERGENCY_LIMIT,
       })
     } catch (err) {
-      logger.error({ correlationId: req.correlationId, error: err.message }, 'Emergency request error')
+      logger.error(
+        { correlationId: req.correlationId, error: err.message },
+        'Emergency request error'
+      )
       return res.status(500).json({ message: 'Failed to process emergency balance.' })
     }
   })

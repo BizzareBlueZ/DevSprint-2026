@@ -10,10 +10,16 @@ export default function AccountPage() {
   const { user, logout, avatar, updateAvatar } = useAuth()
   const navigate = useNavigate()
   const fileRef = useRef(null)
-  const { isSupported, isSubscribed, permission, loading: pushLoading, toggle: togglePush } = usePushNotifications()
+  const {
+    isSupported,
+    isSubscribed,
+    permission,
+    loading: pushLoading,
+    toggle: togglePush,
+  } = usePushNotifications()
   const { t } = useLanguage()
   const studentId = user?.studentId || user?.email?.split('@')[0] || '—'
-  
+
   // Parse student ID to extract year and department
   const studentInfo = parseStudentId(studentId)
   const department = studentInfo.valid ? studentInfo.department : user?.department || 'CSE'
@@ -39,11 +45,11 @@ export default function AccountPage() {
   }
 
   const details = [
-    { label: t('fullName'),   value: user?.name || '—',       icon: '👤' },
-    { label: t('email'),      value: user?.email || '—',      icon: '📧' },
-    { label: t('studentId'),  value: studentId,               icon: '🪪' },
-    { label: t('department'), value: department,              icon: '🏛️' },
-    { label: t('year'),       value: year,                    icon: '📅' },
+    { label: t('fullName'), value: user?.name || '—', icon: '👤' },
+    { label: t('email'), value: user?.email || '—', icon: '📧' },
+    { label: t('studentId'), value: studentId, icon: '🪪' },
+    { label: t('department'), value: department, icon: '🏛️' },
+    { label: t('year'), value: year, icon: '📅' },
   ]
 
   return (
@@ -53,19 +59,41 @@ export default function AccountPage() {
         <div className={styles.heroGlow} />
         <div className={styles.avatarWrap}>
           <div className={styles.avatar}>
-            {avatar
-              ? <img src={avatar} alt="Profile" className={styles.avatarImg} />
-              : (user?.name ? user.name.charAt(0).toUpperCase() : 'S')
-            }
+            {avatar ? (
+              <img src={avatar} alt="Profile" className={styles.avatarImg} />
+            ) : user?.name ? (
+              user.name.charAt(0).toUpperCase()
+            ) : (
+              'S'
+            )}
           </div>
           <div className={styles.avatarRing} />
-          <button className={styles.avatarEditBtn} onClick={() => fileRef.current?.click()} title="Change photo">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
+          <button
+            className={styles.avatarEditBtn}
+            onClick={() => fileRef.current?.click()}
+            title="Change photo"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
             </svg>
           </button>
-          <input ref={fileRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handlePhotoChange} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className={styles.hiddenInput}
+            onChange={handlePhotoChange}
+          />
         </div>
         <div className={styles.heroText}>
           <h1 className={styles.heroName}>{user?.name || 'Student'}</h1>
@@ -108,15 +136,15 @@ export default function AccountPage() {
               <div className={styles.notificationText}>
                 <span className={styles.notificationLabel}>{t('enableNotifications')}</span>
                 <span className={styles.notificationDesc}>
-                  {permission === 'denied' 
+                  {permission === 'denied'
                     ? t('notificationsBlocked')
-                    : isSubscribed 
+                    : isSubscribed
                       ? t('notificationsActive')
                       : t('pushGetNotified')}
                 </span>
               </div>
             </div>
-            <button 
+            <button
               className={`${styles.toggleBtn} ${isSubscribed ? styles.toggleBtnActive : ''}`}
               onClick={togglePush}
               disabled={pushLoading || permission === 'denied'}
@@ -131,19 +159,33 @@ export default function AccountPage() {
       <div className={styles.actions}>
         {avatar && (
           <button className={styles.removePhotoBtn} onClick={handleRemovePhoto}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
             {t('removePhoto')}
           </button>
         )}
         <button className={styles.logoutBtn} onClick={handleLogout}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
           {t('signOut')}
         </button>

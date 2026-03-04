@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import axios from 'axios'
-import { 
-  enableHttpOnlyCookies, 
-  storeUserData, 
-  getUserData, 
-  getAvatarData, 
-  clearAllUserData 
+import {
+  enableHttpOnlyCookies,
+  storeUserData,
+  getUserData,
+  getAvatarData,
+  clearAllUserData,
 } from '../utils/tokenManager'
 
 const AuthContext = createContext(null)
@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
     return userData
   }, [])
 
-  const updateAvatar = useCallback((dataUrl) => {
+  const updateAvatar = useCallback(dataUrl => {
     setAvatar(dataUrl)
     if (dataUrl) {
       try {
@@ -79,7 +79,9 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, avatar, login, logout, updateAvatar, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{ user, avatar, login, logout, updateAvatar, isAuthenticated: !!user }}
+    >
       {children}
     </AuthContext.Provider>
   )

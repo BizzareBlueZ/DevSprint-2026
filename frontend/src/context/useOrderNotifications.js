@@ -35,18 +35,15 @@ export function useOrderNotifications() {
       socket.emit('join-student', { studentId })
     })
 
-    socket.on('order-status', (data) => {
+    socket.on('order-status', data => {
       if (data.status === 'READY') {
         const itemName = data.orderInfo?.itemName || 'Your meal'
         const shortId = data.orderId?.slice(0, 8).toUpperCase() || ''
-        addToast(
-          `${itemName} is ready for pickup! Order #${shortId}`,
-          {
-            type: 'success',
-            title: 'Meal Ready!',
-            onClick: () => navigate(`/order/${data.orderId}`),
-          }
-        )
+        addToast(`${itemName} is ready for pickup! Order #${shortId}`, {
+          type: 'success',
+          title: 'Meal Ready!',
+          onClick: () => navigate(`/order/${data.orderId}`),
+        })
       }
     })
 

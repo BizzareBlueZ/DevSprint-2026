@@ -13,13 +13,20 @@ function incCounter(name, labels = {}, value = 1) {
 function observeHistogram(name, value, labels = {}) {
   const key = `${name}${JSON.stringify(labels)}`
   if (!histograms.has(key)) {
-    histograms.set(key, { sum: 0, count: 0, buckets: new Array(HISTOGRAM_BUCKETS.length + 1).fill(0) })
+    histograms.set(key, {
+      sum: 0,
+      count: 0,
+      buckets: new Array(HISTOGRAM_BUCKETS.length + 1).fill(0),
+    })
   }
   const h = histograms.get(key)
   h.sum += value
   h.count++
   for (let i = 0; i < HISTOGRAM_BUCKETS.length; i++) {
-    if (value <= HISTOGRAM_BUCKETS[i]) { h.buckets[i]++; break }
+    if (value <= HISTOGRAM_BUCKETS[i]) {
+      h.buckets[i]++
+      break
+    }
   }
   if (value > HISTOGRAM_BUCKETS[HISTOGRAM_BUCKETS.length - 1]) h.buckets[HISTOGRAM_BUCKETS.length]++
 }
@@ -32,7 +39,9 @@ function toPrometheusFormat() {
       const [, name, labelsJson] = match
       const labels = labelsJson ? JSON.parse(labelsJson) : {}
       labels.service = 'identity-provider'
-      const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',')
+      const labelStr = Object.entries(labels)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(',')
       lines.push(`# TYPE ${name} counter`)
       lines.push(`${name}{${labelStr}} ${value}`)
     }
@@ -43,7 +52,8 @@ function toPrometheusFormat() {
 function toJSON() {
   const result = { counters: {}, histograms: {} }
   for (const [key, value] of counters) result.counters[key] = value
-  for (const [key, h] of histograms) result.histograms[key] = { sum: h.sum, count: h.count, avg: h.count > 0 ? h.sum / h.count : 0 }
+  for (const [key, h] of histograms)
+    result.histograms[key] = { sum: h.sum, count: h.count, avg: h.count > 0 ? h.sum / h.count : 0 }
   return result
 }
 

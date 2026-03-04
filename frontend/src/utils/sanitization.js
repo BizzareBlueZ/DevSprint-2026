@@ -1,9 +1,9 @@
 /**
  * Input Sanitization Utilities
- * 
+ *
  * These utilities provide XSS protection by sanitizing user input on the frontend.
  * However, ALWAYS validate and sanitize on the backend as well!
- * 
+ *
  * Strategy:
  * 1. Escape HTML entities to prevent XSS attacks
  * 2. Remove suspicious characters and patterns
@@ -24,9 +24,9 @@ export function escapeHtml(text) {
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#039;',
-    '/': '&#x2F;'
+    '/': '&#x2F;',
   }
-  return String(text).replace(/[&<>"'\/]/g, (char) => map[char])
+  return String(text).replace(/[&<>"'/]/g, char => map[char])
 }
 
 /**
@@ -83,16 +83,16 @@ export function sanitizeNumber(value, min = 0, max = Number.MAX_SAFE_INTEGER) {
  */
 export function sanitizeText(text, maxLength = 255) {
   if (!text) return ''
-  
+
   // Remove HTML tags
   let sanitized = stripHtmlTags(text)
-  
+
   // Trim whitespace
   sanitized = sanitized.trim()
-  
+
   // Limit length
   sanitized = sanitized.slice(0, maxLength)
-  
+
   return sanitized
 }
 
@@ -105,7 +105,7 @@ export function sanitizeName(name) {
   if (!name) return ''
   // Keep only letters, spaces, hyphens, apostrophes
   return String(name)
-    .replace(/[^a-zA-Z\s\-']/g, '')
+    .replace(/[^a-zA-Z\s'-]/g, '')
     .trim()
     .slice(0, 100)
 }
@@ -119,7 +119,7 @@ export function sanitizeStudentId(studentId) {
   if (!studentId) return ''
   // Keep alphanumeric and common separators
   const sanitized = String(studentId)
-    .replace(/[^a-zA-Z0-9\-]/g, '')
+    .replace(/[^a-zA-Z0-9-]/g, '')
     .toUpperCase()
     .slice(0, 20)
   return sanitized
@@ -157,15 +157,18 @@ export function sanitizeAmount(amount) {
 export function setupSecurityReporting(endpoint = '/api/security/csp-report') {
   // Report CSP violations to server
   if (typeof window !== 'undefined') {
-    window.addEventListener('securitypolicyviolation', (e) => {
+    window.addEventListener('securitypolicyviolation', e => {
       // Send CSP violation to backend for security monitoring
-      navigator.sendBeacon(endpoint, JSON.stringify({
-        'violated-directive': e.violatedDirective,
-        'blocked-uri': e.blockedURI,
-        'original-policy': e.originalPolicy,
-        'source-file': e.sourceFile,
-        'line-number': e.lineNumber,
-      }))
+      navigator.sendBeacon(
+        endpoint,
+        JSON.stringify({
+          'violated-directive': e.violatedDirective,
+          'blocked-uri': e.blockedURI,
+          'original-policy': e.originalPolicy,
+          'source-file': e.sourceFile,
+          'line-number': e.lineNumber,
+        })
+      )
     })
   }
 }
@@ -181,5 +184,5 @@ export default {
   sanitizeStudentId,
   validateOTP,
   sanitizeAmount,
-  setupSecurityReporting
+  setupSecurityReporting,
 }

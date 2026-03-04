@@ -10,7 +10,7 @@ export default function CafeteriaPage() {
   const { user } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
-  const [balance, setBalance] = useState(0.00)
+  const [balance, setBalance] = useState(0.0)
   const [tokens, setTokens] = useState([])
   const [purchases, setPurchases] = useState([])
   const [loading, setLoading] = useState(false)
@@ -44,7 +44,9 @@ export default function CafeteriaPage() {
       if (purchasesRes.status === 'fulfilled') setPurchases(purchasesRes.value.data.purchases ?? [])
       if (menuRes.status === 'fulfilled') setMenu(menuRes.value.data.items ?? [])
       if (slotsRes.status === 'fulfilled') setTimeSlots(slotsRes.value.data.slots ?? [])
-    } catch {}
+    } catch {
+      // errors handled by Promise.allSettled
+    }
   }
 
   async function handleRefresh() {
@@ -57,10 +59,10 @@ export default function CafeteriaPage() {
     if (!selectedItem) return
     setOrderLoading(true)
     try {
-      const payload = { 
-        itemId: selectedItem.id, 
+      const payload = {
+        itemId: selectedItem.id,
         type,
-        ...(selectedTimeSlot && { scheduledPickupTime: selectedTimeSlot.datetime })
+        ...(selectedTimeSlot && { scheduledPickupTime: selectedTimeSlot.datetime }),
       }
       const res = await axios.post('/api/orders', payload)
       const orderId = res.data.orderId
@@ -92,8 +94,16 @@ export default function CafeteriaPage() {
         <button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}>
           <span>REFRESH</span>
           <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-            style={{ transform: refreshing ? 'rotate(360deg)' : 'none', transition: refreshing ? 'transform 0.6s linear' : 'none' }}
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            style={{
+              transform: refreshing ? 'rotate(360deg)' : 'none',
+              transition: refreshing ? 'transform 0.6s linear' : 'none',
+            }}
           >
             <polyline points="23 4 23 10 17 10" />
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
@@ -111,7 +121,14 @@ export default function CafeteriaPage() {
             <div className={styles.tokenList}>
               {tokens.map((t, i) => (
                 <div key={i} className={styles.tokenChip}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 6v6l4 2" />
                   </svg>
@@ -131,13 +148,22 @@ export default function CafeteriaPage() {
           <div className={styles.calHead}>
             <div className={styles.calWeekCol} />
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-              <div key={d} className={styles.calDayHeader}>{d}</div>
+              <div key={d} className={styles.calDayHeader}>
+                {d}
+              </div>
             ))}
           </div>
           {weeks.map((week, wi) => (
             <div key={wi} className={styles.calRow}>
               <div className={styles.calWeekCol}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ea99f" strokeWidth="2.5">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#3ea99f"
+                  strokeWidth="2.5"
+                >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
@@ -152,7 +178,9 @@ export default function CafeteriaPage() {
                     className={`${styles.calCell} ${isToday ? styles.calToday : ''} ${hasPurchase ? styles.calPurchased : ''}`}
                   >
                     <span className={styles.calDate}>{day.date.getDate()}</span>
-                    <span className={styles.calMonth}>{day.isSameMonth ? '' : format(day.date, 'MMM').toUpperCase()}</span>
+                    <span className={styles.calMonth}>
+                      {day.isSameMonth ? '' : format(day.date, 'MMM').toUpperCase()}
+                    </span>
 
                     {/* Buy buttons for today/near future */}
                     {isToday && (
@@ -181,7 +209,15 @@ export default function CafeteriaPage() {
 
       {/* Order modal */}
       {orderModal && (
-        <div className={styles.modalOverlay} onClick={() => { setOrderModal(null); setSelectedItem(null); setShowSchedule(false); setSelectedTimeSlot(null) }}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => {
+            setOrderModal(null)
+            setSelectedItem(null)
+            setShowSchedule(false)
+            setSelectedTimeSlot(null)
+          }}
+        >
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h3 className={styles.modalTitle}>
               {orderModal === 'dinner' ? t('orderNow') : 'Buy Emergency Coupon'}
@@ -206,18 +242,21 @@ export default function CafeteriaPage() {
                 </button>
               ))}
             </div>
-            
+
             {/* Schedule toggle */}
             <div className={styles.scheduleSection}>
               <label className={styles.scheduleToggle}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={showSchedule}
-                  onChange={e => { setShowSchedule(e.target.checked); if (!e.target.checked) setSelectedTimeSlot(null) }}
+                  onChange={e => {
+                    setShowSchedule(e.target.checked)
+                    if (!e.target.checked) setSelectedTimeSlot(null)
+                  }}
                 />
                 <span>{t('scheduleOrder')}</span>
               </label>
-              
+
               {showSchedule && (
                 <div className={styles.timeSlots}>
                   <p className={styles.timeSlotsLabel}>{t('selectPickupTime')}:</p>
@@ -235,12 +274,20 @@ export default function CafeteriaPage() {
                 </div>
               )}
             </div>
-            
+
             <p className={styles.modalBalance}>
               {t('balance')}: <strong>৳{balance.toFixed(2)}</strong>
             </p>
             <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => { setOrderModal(null); setSelectedItem(null); setShowSchedule(false); setSelectedTimeSlot(null) }}>
+              <button
+                className={styles.modalCancel}
+                onClick={() => {
+                  setOrderModal(null)
+                  setSelectedItem(null)
+                  setShowSchedule(false)
+                  setSelectedTimeSlot(null)
+                }}
+              >
                 {t('cancel')}
               </button>
               <button

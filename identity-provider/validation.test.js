@@ -10,7 +10,9 @@ const {
 
 describe('Login Validation — validateLoginRequest()', () => {
   it('accepts a valid login with email and password', () => {
-    expect(validateLoginRequest({ email: '230042135@iut-dhaka.edu', password: 'password123' }).valid).toBe(true)
+    expect(
+      validateLoginRequest({ email: '230042135@iut-dhaka.edu', password: 'password123' }).valid
+    ).toBe(true)
   })
 
   it('accepts login with bare student ID as email', () => {

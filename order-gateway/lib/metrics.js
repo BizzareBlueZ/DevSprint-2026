@@ -58,7 +58,11 @@ const HISTOGRAM_BUCKETS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000]
 function observeHistogram(name, value, labels = {}) {
   const key = `${name}${JSON.stringify(labels)}`
   if (!histograms.has(key)) {
-    histograms.set(key, { sum: 0, count: 0, buckets: new Array(HISTOGRAM_BUCKETS.length + 1).fill(0) })
+    histograms.set(key, {
+      sum: 0,
+      count: 0,
+      buckets: new Array(HISTOGRAM_BUCKETS.length + 1).fill(0),
+    })
   }
   const h = histograms.get(key)
   h.sum += value
@@ -77,45 +81,53 @@ function observeHistogram(name, value, labels = {}) {
 // ─── Prometheus Format Export ──────────────────────────────────
 function toPrometheusFormat() {
   const lines = []
-  
+
   // Counters
   for (const [key, value] of counters) {
     const match = key.match(/^([^{]+)(.*)$/)
     if (match) {
       const [, name, labelsJson] = match
       const labels = labelsJson ? JSON.parse(labelsJson) : {}
-      const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',')
+      const labelStr = Object.entries(labels)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(',')
       lines.push(`# TYPE ${name} counter`)
       lines.push(`${name}${labelStr ? `{${labelStr}}` : ''} ${value}`)
     }
   }
-  
+
   // Gauges
   for (const [key, value] of gauges) {
     const match = key.match(/^([^{]+)(.*)$/)
     if (match) {
       const [, name, labelsJson] = match
       const labels = labelsJson ? JSON.parse(labelsJson) : {}
-      const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',')
+      const labelStr = Object.entries(labels)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(',')
       lines.push(`# TYPE ${name} gauge`)
       lines.push(`${name}${labelStr ? `{${labelStr}}` : ''} ${value}`)
     }
   }
-  
+
   // Histograms
   for (const [key, h] of histograms) {
     const match = key.match(/^([^{]+)(.*)$/)
     if (match) {
       const [, name, labelsJson] = match
       const labels = labelsJson ? JSON.parse(labelsJson) : {}
-      const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',')
+      const labelStr = Object.entries(labels)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(',')
       const baseLabels = labelStr ? `{${labelStr}}` : ''
-      
+
       lines.push(`# TYPE ${name} histogram`)
       let cumulative = 0
       for (let i = 0; i < HISTOGRAM_BUCKETS.length; i++) {
         cumulative += h.buckets[i]
-        const bucketLabels = labelStr ? `${labelStr},le="${HISTOGRAM_BUCKETS[i]}"` : `le="${HISTOGRAM_BUCKETS[i]}"`
+        const bucketLabels = labelStr
+          ? `${labelStr},le="${HISTOGRAM_BUCKETS[i]}"`
+          : `le="${HISTOGRAM_BUCKETS[i]}"`
         lines.push(`${name}_bucket{${bucketLabels}} ${cumulative}`)
       }
       cumulative += h.buckets[HISTOGRAM_BUCKETS.length]
@@ -125,7 +137,7 @@ function toPrometheusFormat() {
       lines.push(`${name}_count${baseLabels} ${h.count}`)
     }
   }
-  
+
   return lines.join('\n')
 }
 
@@ -141,7 +153,7 @@ function toJSON() {
       alert: getWindowedLatency() > 1000,
     },
   }
-  
+
   for (const [key, value] of counters) {
     result.counters[key] = value
   }
@@ -155,7 +167,7 @@ function toJSON() {
       avg: h.count > 0 ? h.sum / h.count : 0,
     }
   }
-  
+
   return result
 }
 

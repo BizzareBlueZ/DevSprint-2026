@@ -23,7 +23,11 @@ function setGauge(name, value, labels = {}) {
 function observeHistogram(name, value, labels = {}) {
   const key = `${name}${JSON.stringify(labels)}`
   if (!histograms.has(key)) {
-    histograms.set(key, { sum: 0, count: 0, buckets: new Array(HISTOGRAM_BUCKETS.length + 1).fill(0) })
+    histograms.set(key, {
+      sum: 0,
+      count: 0,
+      buckets: new Array(HISTOGRAM_BUCKETS.length + 1).fill(0),
+    })
   }
   const h = histograms.get(key)
   h.sum += value

@@ -22,7 +22,9 @@ function toPrometheusFormat() {
       const [, name, labelsJson] = match
       const labels = labelsJson ? JSON.parse(labelsJson) : {}
       labels.service = 'notification-hub'
-      const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',')
+      const labelStr = Object.entries(labels)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(',')
       lines.push(`# TYPE ${name} counter`)
       lines.push(`${name}{${labelStr}} ${value}`)
     }
@@ -33,7 +35,9 @@ function toPrometheusFormat() {
       const [, name, labelsJson] = match
       const labels = labelsJson ? JSON.parse(labelsJson) : {}
       labels.service = 'notification-hub'
-      const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',')
+      const labelStr = Object.entries(labels)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(',')
       lines.push(`# TYPE ${name} gauge`)
       lines.push(`${name}{${labelStr}} ${value}`)
     }

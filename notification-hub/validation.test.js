@@ -14,7 +14,13 @@ describe('Notification Hub — validateNotifyRequest()', () => {
   })
 
   it('accepts payload with extra fields', () => {
-    expect(validateNotifyRequest({ orderId: 'abc-123', status: 'READY', orderInfo: { itemName: 'Biryani' } }).valid).toBe(true)
+    expect(
+      validateNotifyRequest({
+        orderId: 'abc-123',
+        status: 'READY',
+        orderInfo: { itemName: 'Biryani' },
+      }).valid
+    ).toBe(true)
   })
 
   it('rejects null body', () => {

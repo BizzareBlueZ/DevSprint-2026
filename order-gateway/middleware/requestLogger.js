@@ -23,8 +23,15 @@ function requestLoggerMiddleware(req, res, next) {
     const statusCode = res.statusCode
 
     // Record metrics
-    incCounter(METRICS.HTTP_REQUESTS_TOTAL, { method: req.method, path: req.route?.path || req.path, status: statusCode })
-    observeHistogram(METRICS.HTTP_REQUEST_DURATION_MS, duration, { method: req.method, path: req.route?.path || req.path })
+    incCounter(METRICS.HTTP_REQUESTS_TOTAL, {
+      method: req.method,
+      path: req.route?.path || req.path,
+      status: statusCode,
+    })
+    observeHistogram(METRICS.HTTP_REQUEST_DURATION_MS, duration, {
+      method: req.method,
+      path: req.route?.path || req.path,
+    })
 
     // Log response
     const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info'

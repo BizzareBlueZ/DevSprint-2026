@@ -82,14 +82,14 @@ describe('Order Validation — validateBalance()', () => {
   })
 
   it('error message includes the actual amounts', () => {
-    const result = validateBalance(50.00, 120.00)
+    const result = validateBalance(50.0, 120.0)
     expect(result.error).toContain('50.00')
     expect(result.error).toContain('120.00')
   })
 
   it('handles decimal precision correctly', () => {
-    expect(validateBalance(120.01, 120.00).ok).toBe(true)
-    expect(validateBalance(119.99, 120.00).ok).toBe(false)
+    expect(validateBalance(120.01, 120.0).ok).toBe(true)
+    expect(validateBalance(119.99, 120.0).ok).toBe(false)
   })
 
   it('rejects NaN values', () => {

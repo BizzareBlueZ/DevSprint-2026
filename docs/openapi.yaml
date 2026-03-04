@@ -3,13 +3,13 @@ info:
   title: IUT Cafeteria API
   description: |
     API for the IUT Cafeteria ordering system.
-    
+
     ## Authentication
     All endpoints (except /login, /register, /health) require JWT authentication.
     Pass the token via:
     - `Authorization: Bearer <token>` header
     - `token` httpOnly cookie
-    
+
     ## Correlation IDs
     All requests are assigned an `x-correlation-id` header for distributed tracing.
   version: 1.0.0
@@ -58,23 +58,23 @@ components:
       properties:
         message:
           type: string
-          example: "Invalid credentials."
+          example: 'Invalid credentials.'
 
     User:
       type: object
       properties:
         studentId:
           type: string
-          example: "230042135"
+          example: '230042135'
         email:
           type: string
-          example: "230042135@iut-dhaka.edu"
+          example: '230042135@iut-dhaka.edu'
         name:
           type: string
-          example: "John Doe"
+          example: 'John Doe'
         department:
           type: string
-          example: "CSE"
+          example: 'CSE'
         year:
           type: integer
           example: 3
@@ -87,10 +87,10 @@ components:
           example: 1
         name:
           type: string
-          example: "Chicken Biryani"
+          example: 'Chicken Biryani'
         description:
           type: string
-          example: "Fragrant rice with tender chicken"
+          example: 'Fragrant rice with tender chicken'
         price:
           type: number
           format: float
@@ -189,7 +189,7 @@ paths:
                 email:
                   type: string
                   description: Student ID or full email
-                  example: "230042135"
+                  example: '230042135'
                 password:
                   type: string
                   format: password
