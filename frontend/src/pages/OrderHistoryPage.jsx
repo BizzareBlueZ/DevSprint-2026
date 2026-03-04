@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { QRCodeSVG } from 'qrcode.react'
 import { useLanguage } from '../context/LanguageContext'
 import styles from './OrderHistoryPage.module.css'
 
@@ -18,6 +19,9 @@ export default function OrderHistoryPage() {
     const [reviewModal, setReviewModal] = useState(null)
     const [reviewData, setReviewData] = useState({ rating: 5, comment: '' })
     const [submitting, setSubmitting] = useState(false)
+    
+    // QR Code modal state
+    const [qrModal, setQrModal] = useState(null)
 
     const fetchOrders = useCallback(async () => {
         setLoading(true)
@@ -184,10 +188,10 @@ export default function OrderHistoryPage() {
                                     </button>
                                 )}
                                 
-                                {order.qr_code && order.status === 'READY' && (
+                                {order.qr_code && (order.status === 'READY' || order.status === 'IN_KITCHEN' || order.status === 'STOCK_VERIFIED' || order.status === 'PENDING') && (
                                     <button 
                                         className={styles.qrBtn}
-                                        onClick={() => navigate(`/order/${order.order_id}`)}
+                                        onClick={() => setQrModal(order)}
                                     >
                                         {t('showQR')}
                                     </button>
@@ -255,6 +259,40 @@ export default function OrderHistoryPage() {
                                 disabled={submitting}
                             >
                                 {submitting ? t('submitting') : t('submitReview')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Code Modal */}
+            {qrModal && (
+                <div className={styles.modalBackdrop} onClick={() => setQrModal(null)}>
+                    <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                        <h2>{t('yourQRCode')}</h2>
+                        <p className={styles.itemName}>{qrModal.item_name}</p>
+                        <div className={styles.qrCodeContainer}>
+                            <QRCodeSVG 
+                                value={qrModal.qr_code}
+                                size={200}
+                                level="H"
+                                includeMargin={true}
+                                bgColor="#ffffff"
+                                fgColor="#1a1a2e"
+                            />
+                        </div>
+                        <p className={styles.qrCodeText}>{qrModal.qr_code}</p>
+                        <p className={styles.qrInstruction}>{t('showAtCounter')}</p>
+                        {getStatusBadge(qrModal.status)}
+                        <div className={styles.modalActions}>
+                            <button className={styles.cancelBtn} onClick={() => setQrModal(null)}>
+                                {t('close')}
+                            </button>
+                            <button 
+                                className={styles.submitBtn}
+                                onClick={() => navigate(`/order/${qrModal.order_id}`)}
+                            >
+                                {t('trackOrder')}
                             </button>
                         </div>
                     </div>

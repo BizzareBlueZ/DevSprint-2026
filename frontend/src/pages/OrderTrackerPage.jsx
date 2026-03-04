@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import axios from 'axios'
+import { QRCodeSVG } from 'qrcode.react'
 import styles from './OrderTrackerPage.module.css'
 
 const STEPS = [
@@ -149,13 +150,18 @@ export default function OrderTrackerPage() {
           <div className={styles.qrSection}>
             <div className={styles.qrCode}>
               <div className={styles.qrCodeInner}>
-                <div className={styles.qrPattern}>
-                  {/* Simple text-based QR representation */}
-                  <div className={styles.qrText}>{qrCode}</div>
-                </div>
+                <QRCodeSVG 
+                  value={qrCode}
+                  size={180}
+                  level="H"
+                  includeMargin={true}
+                  bgColor="#ffffff"
+                  fgColor="#1a1a2e"
+                />
               </div>
             </div>
-            <p className={styles.qrInstruction}>Show this code at the counter</p>
+            <p className={styles.qrInstruction}>Show this QR code at the counter</p>
+            <p className={styles.qrCodeText}>{qrCode}</p>
           </div>
         )}
       </div>

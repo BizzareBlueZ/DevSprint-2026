@@ -65,6 +65,10 @@ const translations = {
         showQR: 'Show QR',
         qrPickup: 'QR Code for Pickup',
         scanAtCounter: 'Scan this code at the counter',
+        yourQRCode: 'Your QR Code',
+        showAtCounter: 'Show this QR code at the cafeteria counter',
+        trackOrder: 'Track Order',
+        close: 'Close',
         
         // Cafeteria
         cafeteria: 'Cafeteria',
@@ -370,6 +374,12 @@ const translations = {
         filter: 'ফিল্টার',
         sort: 'সাজান',
         duration: 'সময়কাল',
+        
+        // QR Code
+        showQR: 'কিউআর দেখুন',
+        yourQRCode: 'আপনার কিউআর কোড',
+        showAtCounter: 'ক্যাফেটেরিয়া কাউন্টারে এই কিউআর কোডটি দেখান',
+        trackOrder: 'অর্ডার ট্র্যাক করুন',
         
         // Common Actions
         proceed: 'এগিয়ে যান',

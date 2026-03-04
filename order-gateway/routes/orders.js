@@ -6,6 +6,7 @@ const express = require('express')
 const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const axios = require('axios')
+const QRCode = require('qrcode')
 const { requireAuth } = require('../middleware/auth')
 const { getCorrelationHeaders } = require('../middleware/correlationId')
 const { logger } = require('../lib/logger')
@@ -264,6 +265,84 @@ module.exports = function createOrderRoutes(pool, { redisClient, rabbitChannel, 
     } catch (err) {
       logger.error({ correlationId: req.correlationId, error: err.message }, 'QR fetch error')
       res.status(500).json({ message: 'Failed to get QR code.' })
+    }
+  })
+
+  // GET /orders/:orderId/qr/image - Returns QR code as PNG image
+  router.get('/:orderId/qr/image', requireAuth, async (req, res) => {
+    const { orderId } = req.params
+    const { studentId } = req.user
+    const { size = 200 } = req.query
+
+    try {
+      const result = await pool.query(
+        `SELECT qr_code, status FROM orders.orders WHERE order_id = $1 AND student_id = $2`,
+        [orderId, studentId]
+      )
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Order not found.' })
+      }
+
+      const qrCode = result.rows[0].qr_code
+      
+      // Generate QR code as PNG buffer
+      const qrBuffer = await QRCode.toBuffer(qrCode, {
+        type: 'png',
+        width: Math.min(Math.max(parseInt(size) || 200, 100), 500),
+        margin: 2,
+        color: {
+          dark: '#1a1a2e',
+          light: '#ffffff'
+        },
+        errorCorrectionLevel: 'H'
+      })
+
+      res.set('Content-Type', 'image/png')
+      res.set('Cache-Control', 'public, max-age=3600')
+      res.send(qrBuffer)
+    } catch (err) {
+      logger.error({ correlationId: req.correlationId, error: err.message }, 'QR image generation error')
+      res.status(500).json({ message: 'Failed to generate QR code image.' })
+    }
+  })
+
+  // GET /orders/:orderId/qr/svg - Returns QR code as SVG
+  router.get('/:orderId/qr/svg', requireAuth, async (req, res) => {
+    const { orderId } = req.params
+    const { studentId } = req.user
+    const { size = 200 } = req.query
+
+    try {
+      const result = await pool.query(
+        `SELECT qr_code, status FROM orders.orders WHERE order_id = $1 AND student_id = $2`,
+        [orderId, studentId]
+      )
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Order not found.' })
+      }
+
+      const qrCode = result.rows[0].qr_code
+      
+      // Generate QR code as SVG
+      const svgString = await QRCode.toString(qrCode, {
+        type: 'svg',
+        width: Math.min(Math.max(parseInt(size) || 200, 100), 500),
+        margin: 2,
+        color: {
+          dark: '#1a1a2e',
+          light: '#ffffff'
+        },
+        errorCorrectionLevel: 'H'
+      })
+
+      res.set('Content-Type', 'image/svg+xml')
+      res.set('Cache-Control', 'public, max-age=3600')
+      res.send(svgString)
+    } catch (err) {
+      logger.error({ correlationId: req.correlationId, error: err.message }, 'QR SVG generation error')
+      res.status(500).json({ message: 'Failed to generate QR code.' })
     }
   })
 

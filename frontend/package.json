@@ -16,7 +16,8 @@
     "react-router-dom": "^6.26.0",
     "axios": "^1.7.7",
     "socket.io-client": "^4.7.5",
-    "date-fns": "^3.6.0"
+    "date-fns": "^3.6.0",
+    "qrcode.react": "^4.0.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.8",
