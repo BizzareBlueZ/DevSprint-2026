@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import styles from './AdminDashboard.module.css'
 
@@ -71,21 +70,25 @@ export default function AdminDashboard() {
   const [alerts, setAlerts] = useState([])
   const [latencyWindow, setLatencyWindow] = useState({})
   const [filterCategory, setFilterCategory] = useState('all')
-  const navigate = useNavigate()
-
   const fetchAll = useCallback(async () => {
     const healthMap = {}
     const metricsMap = {}
     await Promise.allSettled(
       SERVICES.map(async svc => {
         try {
-          const r = await axios.get(`${svcUrl(svc)}/health`, { timeout: 2000 })
+          const r = await axios.get(`${svcUrl(svc)}/health`, {
+            timeout: 2000,
+            withCredentials: true,
+          })
           healthMap[svc.id] = { ok: true, data: r.data }
         } catch {
           healthMap[svc.id] = { ok: false }
         }
         try {
-          const r = await axios.get(`${svcUrl(svc)}/metrics`, { timeout: 2000 })
+          const r = await axios.get(`${svcUrl(svc)}/metrics`, {
+            timeout: 2000,
+            withCredentials: true,
+          })
           metricsMap[svc.id] = r.data
           const ms = r.data.averageLatencyMs || 0
           const now = Date.now()
@@ -130,12 +133,12 @@ export default function AdminDashboard() {
         { killed: willKill },
         {
           timeout: 2000,
+          withCredentials: true,
         }
       )
     } catch (err) {
       if (err.response?.status === 401) {
-        sessionStorage.removeItem('admin_user')
-        navigate('/admin/login')
+        setChaosLoading(prev => ({ ...prev, [svc.id]: false }))
         return
       }
     }

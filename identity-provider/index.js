@@ -38,6 +38,15 @@ webpush.setVapidDetails('mailto:admin@iut-cafeteria.app', VAPID_PUBLIC_KEY, VAPI
 const pool = require('./db')
 const app = express()
 
+function shouldUseSecureCookie(req) {
+  if (process.env.ENABLE_HTTPS === 'true') return true
+  const forwardedProto = req.headers['x-forwarded-proto']
+  if (typeof forwardedProto === 'string') {
+    return forwardedProto.split(',')[0].trim() === 'https'
+  }
+  return req.secure === true
+}
+
 // ─── Middleware ────────────────────────────────────────────────
 app.use(
   cors({
@@ -169,7 +178,7 @@ app.post('/login', loginLimiter, async (req, res) => {
       sameSite: 'lax',
       path: '/',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true',
+      secure: shouldUseSecureCookie(req),
     })
 
     return res.status(200).json({
@@ -300,7 +309,7 @@ app.post('/admin/login', async (req, res) => {
       sameSite: 'lax',
       path: '/',
       maxAge: 8 * 60 * 60 * 1000, // 8 hours
-      secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true',
+      secure: shouldUseSecureCookie(req),
     })
     return res.status(200).json({ admin: payload })
   } catch (err) {
@@ -318,7 +327,7 @@ app.post('/logout', (req, res) => {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    secure: process.env.NODE_ENV === 'production' || process.env.ENABLE_HTTPS === 'true',
+    secure: shouldUseSecureCookie(req),
   })
   return res.status(200).json({ message: 'Logged out successfully.' })
 })

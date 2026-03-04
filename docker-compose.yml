@@ -42,9 +42,10 @@ services:
       - cafeteria-net
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   # ── pgAdmin — Web-based Database Viewer ─────────────────────
   pgadmin:

@@ -1,0 +1,19 @@
+# Ignore node_modules from host - let Docker install fresh
+node_modules
+
+# Build output
+dist
+
+# Development files
+.env
+.env.local
+*.log
+
+# IDE and OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage
