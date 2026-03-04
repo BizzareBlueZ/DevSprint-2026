@@ -13,8 +13,8 @@ const JWT_SECRET = process.env.JWT_SECRET
 let isKilled = false
 
 function chaosMiddleware(req, res, next) {
-  // Allow /health, /chaos, and /metrics even when killed
-  const allowed = ['/health', '/chaos', '/metrics']
+  // Allow /health, /chaos, /chaos/status, and /metrics even when killed
+  const allowed = ['/health', '/chaos', '/chaos/status', '/metrics']
   if (isKilled && !allowed.includes(req.path)) {
     return res.status(503).json({ message: 'Service is currently disabled (chaos mode).' })
   }

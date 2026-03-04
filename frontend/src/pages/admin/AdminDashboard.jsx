@@ -136,6 +136,8 @@ export default function AdminDashboard() {
           withCredentials: true,
         }
       )
+      // Success - update local state
+      setKilled(prev => ({ ...prev, [svc.id]: willKill }))
       // Broadcast service status change to all connected students
       try {
         await axios.post(
@@ -152,15 +154,12 @@ export default function AdminDashboard() {
       } catch {
         /* notification hub may be down — non-blocking */
       }
+      setTimeout(fetchAll, 1200)
     } catch (err) {
-      if (err.response?.status === 401) {
-        setChaosLoading(prev => ({ ...prev, [svc.id]: false }))
-        return
-      }
+      console.error('Chaos toggle failed:', err.response?.data || err.message)
+    } finally {
+      setChaosLoading(prev => ({ ...prev, [svc.id]: false }))
     }
-    setKilled(prev => ({ ...prev, [svc.id]: willKill }))
-    setChaosLoading(prev => ({ ...prev, [svc.id]: false }))
-    setTimeout(fetchAll, 1200)
   }
 
   const onlineCount = SERVICES.filter(s => health[s.id]?.ok && !killed[s.id]).length
