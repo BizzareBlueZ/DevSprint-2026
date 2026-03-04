@@ -70,14 +70,28 @@ app.use((req, res, next) => {
 })
 
 // ─── Redis Client (for rate limiting) ──────────────────────────
+// Note: Redis is optional - falls back to in-memory rate limiting
 let redisClient = null
-try {
-  const Redis = require('ioredis')
-  redisClient = new Redis(REDIS_URL, { lazyConnect: true, enableOfflineQueue: false })
-  redisClient.connect()
-    .then(() => logger.info('Connected to Redis'))
-    .catch(() => { logger.warn('Redis not available - using in-memory rate limiting'); redisClient = null })
-} catch { logger.warn('Redis not available') }
+let redisConnected = false
+
+async function initRedis() {
+  try {
+    const Redis = require('ioredis')
+    redisClient = new Redis(REDIS_URL, { 
+      lazyConnect: true, 
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
+      retryStrategy: () => null, // Don't retry
+    })
+    await redisClient.connect()
+    redisConnected = true
+    logger.info('Connected to Redis')
+  } catch (err) { 
+    logger.warn({ error: err.message }, 'Redis not available - using in-memory rate limiting')
+    redisClient = null
+    redisConnected = false
+  }
+}
 
 // ─── Rate Limiting ─────────────────────────────────────────────
 const createRateLimiter = (windowMs, max, message) => {
@@ -90,15 +104,7 @@ const createRateLimiter = (windowMs, max, message) => {
     keyGenerator: (req) => req.user?.studentId || req.ip,
   }
 
-  // Use Redis store if available
-  if (redisClient) {
-    const RedisStore = require('rate-limit-redis').default
-    config.store = new RedisStore({
-      sendCommand: (...args) => redisClient.call(...args),
-      prefix: 'rl:',
-    })
-  }
-
+  // Redis store is configured later after connection
   return rateLimit(config)
 }
 
@@ -325,16 +331,29 @@ app.use((err, req, res, _next) => {
 
 // ─── Start Server ──────────────────────────────────────────────
 const PORT = process.env.PORT || 8080
-const server = app.listen(PORT, () => {
-  logger.info({ port: PORT }, 'API Gateway started')
-})
 
-// ─── Graceful Shutdown ─────────────────────────────────────────
-gracefulShutdown(server, {
-  logger,
-  onShutdown: async () => {
-    if (redisClient) await redisClient.quit().catch(() => {})
-  },
+async function start() {
+  // Try to connect to Redis (optional)
+  await initRedis()
+  
+  const server = app.listen(PORT, () => {
+    logger.info({ port: PORT, redis: redisConnected }, 'API Gateway started')
+  })
+
+  // ─── Graceful Shutdown ─────────────────────────────────────────
+  gracefulShutdown(server, {
+    logger,
+    onShutdown: async () => {
+      if (redisClient && redisConnected) {
+        await redisClient.quit().catch(() => {})
+      }
+    },
+  })
+}
+
+start().catch(err => {
+  logger.fatal({ error: err.message }, 'Failed to start API Gateway')
+  process.exit(1)
 })
 
 module.exports = app

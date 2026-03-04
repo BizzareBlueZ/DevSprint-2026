@@ -192,11 +192,18 @@ services:
       KITCHEN_QUEUE_URL: http://kitchen-queue:3003
       NOTIFICATION_HUB_URL: http://notification-hub:3004
     depends_on:
-      - identity-provider
-      - order-gateway
-      - stock-service
-      - kitchen-queue
-      - notification-hub
+      redis:
+        condition: service_healthy
+      identity-provider:
+        condition: service_started
+      order-gateway:
+        condition: service_started
+      stock-service:
+        condition: service_started
+      kitchen-queue:
+        condition: service_started
+      notification-hub:
+        condition: service_started
     networks:
       - cafeteria-net
 
